@@ -5,8 +5,11 @@
 	if (accent) document.documentElement.style.setProperty("--accent", accent);
 	const hideWhenIdle = params.get("hideWhenIdle") !== "0";
 	const hideWhenPaused = params.get("hideWhenPaused") === "1";
+	const blurBg = params.get("bg") === "blur";
 
 	const card = document.getElementById("card");
+	if (blurBg) card.classList.add("bg-blur");
+	const artBg = document.getElementById("artBg");
 	const art = document.getElementById("art");
 	const titleEl = document.getElementById("title");
 	const artistEl = document.getElementById("artist");
@@ -46,8 +49,10 @@
 		if (s.thumbnail && art.dataset.src !== s.thumbnail) {
 			art.dataset.src = s.thumbnail;
 			art.src = s.thumbnail;
+			if (blurBg) artBg.style.backgroundImage = `url("${s.thumbnail}")`;
 		} else if (!s.thumbnail) {
 			art.removeAttribute("src");
+			if (blurBg) artBg.style.backgroundImage = "";
 		}
 
 		const dur = s.duration || 0;

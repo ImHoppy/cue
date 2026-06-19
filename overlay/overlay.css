@@ -31,8 +31,31 @@ html, body {
 	backdrop-filter: blur(14px);
 	-webkit-backdrop-filter: blur(14px);
 	color: var(--text);
+	position: relative;
+	overflow: hidden;
 	transition: opacity 0.45s ease, transform 0.45s ease;
 }
+
+.art-bg { display: none; }
+.card.bg-blur .art-bg {
+	display: block;
+	position: absolute;
+	inset: 0;
+	z-index: 0;
+	background-size: cover;
+	background-position: center;
+	background-repeat: no-repeat;
+	filter: blur(26px) brightness(0.5) saturate(1.2);
+	/* transform: scale(1.4); */
+}
+.card.bg-blur .art-bg::after {
+	content: "";
+	position: absolute;
+	inset: 0;
+	background: linear-gradient(90deg, rgba(0,0,0,0.45), rgba(0,0,0,0.55));
+}
+.card.bg-blur .art-wrap,
+.card.bg-blur .info { position: relative; z-index: 1; }
 
 .card.hidden {
 	opacity: 0;
