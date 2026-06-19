@@ -1,0 +1,31 @@
+{
+  "manifest_version": 3,
+  "name": "YouTube Music for OBS Overlay",
+  "version": "1.0.0",
+  "description": "Sends the currently playing YouTube Music track (title, artist, thumbnail, progress) to a local OBS overlay.",
+  "icons": {
+    "48": "icons/icon_48x48.png",
+    "96": "icons/icon_96x96.png",
+    "128": "icons/icon_128x128.png"
+  },
+  "permissions": ["storage", "alarms"],
+  "host_permissions": [
+    "*://music.youtube.com/*",
+    "ws://localhost/*",
+    "http://localhost/*"
+  ],
+  "background": {
+    "service_worker": "background.js"
+  },
+  "action": {
+    "default_popup": "popup.html",
+    "default_title": "YT Music OBS Overlay"
+  },
+  "content_scripts": [
+    {
+      "matches": ["*://music.youtube.com/*"],
+      "js": ["scraper.js"],
+      "run_at": "document_idle"
+    }
+  ]
+}
