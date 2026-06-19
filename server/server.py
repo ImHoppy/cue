@@ -192,6 +192,7 @@ CONTENT_TYPES = {
 }
 
 def serve_static(conn, path):
+    path = path.split("?", 1)[0].split("#", 1)[0]
     if path in ("/", ""):
         path = "/index.html"
     rel = path.lstrip("/")
