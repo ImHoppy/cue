@@ -8,6 +8,10 @@
 	let blurBg = params.get("bg") === "blur";
 	let compact = params.get("compact") === "1";
 
+	const forced = new Set();
+	const paramToKey = { accent: "accent", bg: "blur", compact: "compact", hideWhenIdle: "hideWhenIdle", hideWhenPaused: "hideWhenPaused" };
+	for (const p in paramToKey) if (params.has(p)) forced.add(paramToKey[p]);
+
 	const card = document.getElementById("card");
 	if (blurBg) card.classList.add("bg-blur");
 	if (compact) card.classList.add("compact");
@@ -94,7 +98,7 @@
 		if (!s || typeof s !== "object") return;
 		const root = document.documentElement.style;
 		const num = (v) => typeof v === "number" && !Number.isNaN(v);
-		if (typeof s.accent === "string" && s.accent) {
+		if (typeof s.accent === "string" && s.accent && !forced.has("accent")) {
 			root.setProperty("--accent", s.accent);
 		}
 		if (typeof s.textColor === "string" && s.textColor) {
@@ -122,11 +126,11 @@
 		if (typeof s.showProgress === "boolean") {
 			card.classList.toggle("no-progress", !s.showProgress);
 		}
-		if (typeof s.compact === "boolean") {
+		if (typeof s.compact === "boolean" && !forced.has("compact")) {
 			compact = s.compact;
 			card.classList.toggle("compact", compact);
 		}
-		if (typeof s.blur === "boolean") {
+		if (typeof s.blur === "boolean" && !forced.has("blur")) {
 			blurBg = s.blur;
 			card.classList.toggle("bg-blur", blurBg);
 			if (blurBg && current && current.thumbnail) {
@@ -135,8 +139,8 @@
 				artBg.style.backgroundImage = "";
 			}
 		}
-		if (typeof s.hideWhenIdle === "boolean") hideWhenIdle = s.hideWhenIdle;
-		if (typeof s.hideWhenPaused === "boolean") hideWhenPaused = s.hideWhenPaused;
+		if (typeof s.hideWhenIdle === "boolean" && !forced.has("hideWhenIdle")) hideWhenIdle = s.hideWhenIdle;
+		if (typeof s.hideWhenPaused === "boolean" && !forced.has("hideWhenPaused")) hideWhenPaused = s.hideWhenPaused;
 		render();
 	}
 
