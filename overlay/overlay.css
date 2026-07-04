@@ -93,7 +93,6 @@ html, body {
 	font-weight: 700;
 	white-space: nowrap;
 	overflow: hidden;
-	text-overflow: ellipsis;
 	max-width: 230px;
 }
 
@@ -102,8 +101,17 @@ html, body {
 	color: var(--subtext);
 	white-space: nowrap;
 	overflow: hidden;
-	text-overflow: ellipsis;
 	max-width: 230px;
+}
+
+.scroll-inner { display: inline-block; white-space: nowrap; }
+.title.scrolling .scroll-inner {
+	animation: marquee var(--marquee-dur, 10s) linear infinite;
+}
+@keyframes marquee {
+	0%, 12% { transform: translateX(0); }
+	50%, 62% { transform: translateX(var(--marquee-shift, 0)); }
+	100% { transform: translateX(0); }
 }
 
 .progress { display: flex; align-items: center; gap: 7px; margin-top: 3px; }
@@ -113,12 +121,12 @@ html, body {
 .bar { position: relative; width: 150px; height: 3px; border-radius: 2px; background: rgba(255, 255, 255, 0.16); overflow: hidden; }
 .fill { position: absolute; inset: 0 auto 0 0; width: 0%; background: var(--accent); border-radius: 2px; transition: width 0.4s linear; }
 
-.card.compact { padding: 6px 12px 6px 6px; max-width: none; gap: 10px; }
+.card.compact { padding: 6px 12px 6px 6px; max-width: 320px; gap: 10px; }
 .card.compact .art-wrap { width: 26px; height: 26px; border-radius: 6px; box-shadow: none; }
-.card.compact .info { flex-direction: row; align-items: center; gap: 8px; }
-.card.compact .title { font-size: 13px; max-width: 180px; }
+.card.compact .info { flex-direction: row; align-items: center; gap: 5px; }
+.card.compact .title { font-size: 13px; max-width: 160px; }
 .card.compact .artist { font-size: 13px; font-weight: 500; max-width: 140px; }
-.card.compact .artist:not(:empty)::before { content: "•"; margin-right: 8px; color: var(--subtext); }
-.card.compact .progress { margin-top: 0; gap: 0; }
+.card.compact:not(.no-artist) .artist::before { content: "•"; margin-right: 5px; color: var(--subtext); }
+.card.compact .progress { gap: 0; margin-left: 6px; }
 .card.compact .time { display: none; }
-.card.compact .bar { width: 90px; }
+.card.compact .bar { width: 45px; }

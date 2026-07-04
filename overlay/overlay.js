@@ -19,6 +19,8 @@
 	const art = document.getElementById("art");
 	const titleEl = document.getElementById("title");
 	const artistEl = document.getElementById("artist");
+	const titleInner = titleEl.querySelector(".scroll-inner");
+	const artistInner = artistEl.querySelector(".scroll-inner");
 	const elapsedEl = document.getElementById("elapsed");
 	const durationEl = document.getElementById("duration");
 	const fill = document.getElementById("fill");
@@ -34,6 +36,19 @@
 		return `${m}:${String(s).padStart(2, "0")}`;
 	}
 
+	function updateMarquee(box, inner) {
+		const sig = inner.textContent + "|" + box.clientWidth;
+		if (box.dataset.mqSig === sig) return;
+		box.dataset.mqSig = sig;
+		box.classList.remove("scrolling");
+		const over = box.scrollWidth - box.clientWidth;
+		if (over > 2) {
+			box.style.setProperty("--marquee-shift", `-${over + 4}px`);
+			box.style.setProperty("--marquee-dur", `${Math.max(6, (over + 4) / 12 + 4)}s`);
+			box.classList.add("scrolling");
+		}
+	}
+
 	function render() {
 		const s = current;
 		if (!s || !s.hasTrack) {
@@ -46,10 +61,11 @@
 		}
 		card.classList.remove("hidden");
 		card.classList.toggle("paused", !s.playing);
+		card.classList.toggle("no-artist", !s.artist);
 
-		titleEl.textContent = s.title || "—";
+		titleInner.textContent = s.title || "—";
 		titleEl.title = s.title || "";
-		artistEl.textContent = s.artist || "";
+		artistInner.textContent = s.artist || "";
 		artistEl.title = s.artist || "";
 
 		if (s.thumbnail && art.dataset.src !== s.thumbnail) {
@@ -63,6 +79,8 @@
 
 		const dur = s.duration || 0;
 		durationEl.textContent = fmt(dur);
+
+		updateMarquee(titleEl, titleInner);
 	}
 
 	function animate() {
