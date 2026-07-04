@@ -189,8 +189,11 @@ def handle_websocket(conn, key):
             pass
 
 
-HERE = os.path.dirname(os.path.abspath(__file__))
-OVERLAY_DIR = os.path.normpath(os.path.join(HERE, "..", "overlay"))
+if getattr(sys, "frozen", False):
+    OVERLAY_DIR = os.path.join(sys._MEIPASS, "overlay")
+else:
+    HERE = os.path.dirname(os.path.abspath(__file__))
+    OVERLAY_DIR = os.path.normpath(os.path.join(HERE, "..", "overlay"))
 
 CONTENT_TYPES = {
     ".html": "text/html; charset=utf-8",
@@ -274,6 +277,14 @@ def handle_connection(conn, addr):
         except OSError:
             pass
 
+def log(*parts):
+    if sys.stdout is None:
+        return
+    try:
+        print(*parts)
+    except (OSError, ValueError):
+        pass
+
 
 def main():
     parser = argparse.ArgumentParser(description="YouTube Music -> OBS overlay server")
@@ -286,10 +297,10 @@ def main():
     server.bind((args.host, args.port))
     server.listen(16)
 
-    print(f"Overlay server running:")
-    print(f"  OBS Browser Source URL : http://localhost:{args.port}/")
-    print(f"  Extension WebSocket    : ws://localhost:{args.port}/ws")
-    print("Press Ctrl+C to stop.")
+    log("Overlay server running:")
+    log(f"  OBS Browser Source URL : http://localhost:{args.port}/")
+    log(f"  Extension WebSocket    : ws://localhost:{args.port}/ws")
+    log("Press Ctrl+C to stop.")
 
     try:
         while True:
@@ -297,7 +308,7 @@ def main():
             conn.setsockopt(socket.IPPROTO_TCP, socket.TCP_NODELAY, 1)
             threading.Thread(target=handle_connection, args=(conn, addr), daemon=True).start()
     except KeyboardInterrupt:
-        print("\nShutting down.")
+        log("\nShutting down.")
     finally:
         server.close()
 
