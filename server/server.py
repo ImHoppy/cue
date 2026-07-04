@@ -13,6 +13,7 @@ import json
 import os
 import socket
 import struct
+import sys
 import threading
 from http import HTTPStatus
 
@@ -21,12 +22,16 @@ class Hub:
     def __init__(self):
         self._clients = set()
         self._last_state = None
+        self._last_settings = None
         self._lock = threading.Lock()
 
     def add(self, client):
         with self._lock:
             self._clients.add(client)
+            settings = self._last_settings
             state = self._last_state
+        if settings is not None:
+            client.send_text(settings)
         if state is not None:
             client.send_text(state)
 
@@ -34,9 +39,12 @@ class Hub:
         with self._lock:
             self._clients.discard(client)
 
-    def broadcast(self, message, sender=None):
+    def broadcast(self, message, sender=None, is_settings=False):
         with self._lock:
-            self._last_state = message
+            if is_settings:
+                self._last_settings = message
+            else:
+                self._last_state = message
             targets = [c for c in self._clients if c is not sender]
         for c in targets:
             c.send_text(message)
@@ -163,13 +171,16 @@ def handle_websocket(conn, key):
                 except UnicodeDecodeError:
                     continue
                 # Ignore role announcements; everything else is rebroadcast.
+                is_settings = False
                 try:
                     parsed = json.loads(text)
-                    if isinstance(parsed, dict) and parsed.get("role"):
-                        continue
+                    if isinstance(parsed, dict):
+                        if parsed.get("role"):
+                            continue
+                        is_settings = parsed.get("type") == "SETTINGS"
                 except (ValueError, TypeError):
                     pass
-                HUB.broadcast(text, sender=client)
+                HUB.broadcast(text, sender=client, is_settings=is_settings)
     finally:
         HUB.remove(client)
         try:

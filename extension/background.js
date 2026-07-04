@@ -1,10 +1,26 @@
 const browserAPI = typeof browser !== "undefined" ? browser : chrome;
 
 const DEFAULT_PORT = 8787;
+const DEFAULT_SETTINGS = {
+	accent: "#ff2d55",
+	textColor: "#ffffff",
+	bgColor: "#121216",
+	opacity: 82,
+	scale: 100,
+	radius: 12,
+	blur: false,
+	blurAmount: 26,
+	blurDark: 50,
+	showProgress: true,
+	hideWhenIdle: true,
+	hideWhenPaused: false,
+};
+
 let ws = null;
 let connected = false;
 let reconnectTimer = null;
 let lastSnapshot = { hasTrack: false, playing: false };
+let settings = { ...DEFAULT_SETTINGS };
 
 async function getPort() {
 	try {
@@ -13,6 +29,22 @@ async function getPort() {
 	} catch {
 		return DEFAULT_PORT;
 	}
+}
+
+async function loadSettings() {
+	try {
+		const { overlaySettings } = await browserAPI.storage.local.get("overlaySettings");
+		settings = { ...DEFAULT_SETTINGS, ...(overlaySettings || {}) };
+	} catch {
+		settings = { ...DEFAULT_SETTINGS };
+	}
+}
+
+function sendSettings() {
+	if (!ws || ws.readyState !== WebSocket.OPEN) return;
+	try {
+		ws.send(JSON.stringify({ type: "SETTINGS", payload: settings }));
+	} catch {}
 }
 
 async function connect() {
@@ -29,6 +61,7 @@ async function connect() {
 	ws.onopen = () => {
 		connected = true;
 		ws.send(JSON.stringify({ role: "producer" }));
+		sendSettings();
 		send(lastSnapshot);
 	};
 
@@ -57,8 +90,14 @@ browserAPI.runtime.onMessage.addListener((msg, _sender, sendResponse) => {
 		connect();
 		send(lastSnapshot);
 	}
+	if (msg && msg.type === "SET_SETTINGS") {
+		settings = { ...DEFAULT_SETTINGS, ...(msg.payload || {}) };
+		browserAPI.storage.local.set({ overlaySettings: settings });
+		connect();
+		sendSettings();
+	}
 	if (msg && msg.type === "GET_STATUS") {
-		sendResponse({ connected, port: undefined, lastSnapshot });
+		sendResponse({ connected, port: undefined, lastSnapshot, settings });
 		return true;
 	}
 });
@@ -66,4 +105,4 @@ browserAPI.runtime.onMessage.addListener((msg, _sender, sendResponse) => {
 browserAPI.alarms.create("keepalive", { periodInMinutes: 0.25 });
 browserAPI.alarms.onAlarm.addListener(() => connect());
 
-connect();
+loadSettings().then(connect);

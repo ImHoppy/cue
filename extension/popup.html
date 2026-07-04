@@ -3,13 +3,20 @@
 <head>
 	<meta charset="utf-8">
 	<style>
-		body { width: 260px; margin: 0; padding: 14px; font-family: system-ui, -apple-system, Segoe UI, sans-serif; background: #1e1f22; color: #dbdee1; }
+		body { width: 268px; margin: 0; padding: 14px; font-family: system-ui, -apple-system, Segoe UI, sans-serif; background: #1e1f22; color: #dbdee1; }
 		h1 { font-size: 13px; margin: 0 0 10px; color: #fff; }
 		.row { display: flex; align-items: center; justify-content: space-between; margin: 8px 0; font-size: 12px; }
 		.dot { width: 9px; height: 9px; border-radius: 50%; display: inline-block; margin-right: 6px; vertical-align: middle; }
 		.on { background: #23a55a; box-shadow: 0 0 8px #23a55a; }
 		.off { background: #f23f43; }
-		input { width: 70px; background: #2b2d31; border: 1px solid #3a3c41; color: #fff; border-radius: 6px; padding: 4px 6px; font-size: 12px; }
+		input[type=number] { width: 70px; background: #2b2d31; border: 1px solid #3a3c41; color: #fff; border-radius: 6px; padding: 4px 6px; font-size: 12px; }
+		input[type=color] { width: 34px; height: 24px; padding: 0; border: 1px solid #3a3c41; border-radius: 6px; background: #2b2d31; cursor: pointer; }
+		input[type=range] { width: 110px; accent-color: #5865f2; }
+		.ctl { display: flex; align-items: center; gap: 8px; }
+		input[type=checkbox] { accent-color: #5865f2; width: 15px; height: 15px; }
+		.section { margin-top: 12px; padding-top: 10px; border-top: 1px solid #2b2d31; }
+		.section h2 { font-size: 11px; text-transform: uppercase; letter-spacing: 0.04em; color: #9ca3af; margin: 0 0 6px; }
+		.val { color: #9ca3af; min-width: 30px; text-align: right; font-variant-numeric: tabular-nums; }
 		.track { margin-top: 10px; padding: 8px; background: #2b2d31; border-radius: 8px; font-size: 12px; }
 		.track .t { font-weight: 600; color: #fff; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 		.track .a { color: #9ca3af; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
@@ -27,6 +34,77 @@
 		<input id="port" type="number" min="1" max="65535" value="8787">
 	</div>
 	<button id="save">Save port</button>
+
+	<div class="section">
+		<h2>Overlay style</h2>
+		<div class="row">
+			<label for="accent">Accent color</label>
+			<input id="accent" type="color" value="#ff2d55">
+		</div>
+		<div class="row">
+			<label for="textColor">Text color</label>
+			<input id="textColor" type="color" value="#ffffff">
+		</div>
+		<div class="row">
+			<label for="bgColor">Background color</label>
+			<input id="bgColor" type="color" value="#121216">
+		</div>
+		<div class="row">
+			<label for="opacity">Background opacity</label>
+			<span class="ctl">
+				<input id="opacity" type="range" min="0" max="100" value="82">
+				<span class="val" id="opacityVal">82%</span>
+			</span>
+		</div>
+		<div class="row">
+			<label for="scale">Size</label>
+			<span class="ctl">
+				<input id="scale" type="range" min="60" max="180" value="100">
+				<span class="val" id="scaleVal">100%</span>
+			</span>
+		</div>
+		<div class="row">
+			<label for="radius">Corner radius</label>
+			<span class="ctl">
+				<input id="radius" type="range" min="0" max="30" value="12">
+				<span class="val" id="radiusVal">12px</span>
+			</span>
+		</div>
+		<div class="row">
+			<label for="showProgress">Show progress bar</label>
+			<input id="showProgress" type="checkbox" checked>
+		</div>
+		<div class="row">
+			<label for="blur">Blurred album-art background</label>
+			<input id="blur" type="checkbox">
+		</div>
+		<div id="blurOpts" style="display:none">
+			<div class="row">
+				<label for="blurAmount">— Blur amount</label>
+				<span class="ctl">
+					<input id="blurAmount" type="range" min="0" max="50" value="26">
+					<span class="val" id="blurAmountVal">26px</span>
+				</span>
+			</div>
+			<div class="row">
+				<label for="blurDark">— Darkness</label>
+				<span class="ctl">
+					<input id="blurDark" type="range" min="0" max="90" value="50">
+					<span class="val" id="blurDarkVal">50%</span>
+				</span>
+			</div>
+		</div>
+		<div class="row">
+			<label for="hideWhenIdle">Hide when nothing is playing</label>
+			<input id="hideWhenIdle" type="checkbox" checked>
+		</div>
+		<div class="row">
+			<label for="hideWhenPaused">Hide while paused</label>
+			<input id="hideWhenPaused" type="checkbox">
+		</div>
+		<button id="reset" style="background:#2b2d31">Reset to defaults</button>
+	</div>
+
 	<div class="track" id="track" style="display:none">
 		<div class="t" id="trackTitle"></div>
 		<div class="a" id="trackArtist"></div>

@@ -1,10 +1,15 @@
 :root {
-	--bg: rgba(18, 18, 22, 0.82);
+	--bg-rgb: 18, 18, 22;
+	--bg-alpha: 0.82;
+	--bg: rgba(var(--bg-rgb), var(--bg-alpha));
 	--accent: #ff2d55;
 	--text: #ffffff;
 	--subtext: #b9bcc4;
 	--radius: 12px;
 	--art: 60px;
+	--scale: 1;
+	--blur-amount: 26px;
+	--blur-brightness: 0.5;
 }
 
 * { box-sizing: border-box; }
@@ -12,6 +17,8 @@
 html, body {
 	margin: 0;
 	padding: 0;
+	width: 100%;
+	min-height: 100vh;
 	background: transparent;
 	font-family: "Inter", "Segoe UI", system-ui, -apple-system, sans-serif;
 	overflow: hidden;
@@ -33,6 +40,8 @@ html, body {
 	color: var(--text);
 	position: relative;
 	overflow: hidden;
+	transform: scale(var(--scale));
+	transform-origin: top left;
 	transition: opacity 0.45s ease, transform 0.45s ease;
 }
 
@@ -45,7 +54,7 @@ html, body {
 	background-size: cover;
 	background-position: center;
 	background-repeat: no-repeat;
-	filter: blur(26px) brightness(0.5) saturate(1.2);
+	filter: blur(var(--blur-amount)) brightness(var(--blur-brightness)) saturate(1.2);
 	/* transform: scale(1.4); */
 }
 .card.bg-blur .art-bg::after {
@@ -59,9 +68,11 @@ html, body {
 
 .card.hidden {
 	opacity: 0;
-	transform: translateY(-12px);
+	transform: scale(var(--scale)) translateY(-12px);
 	pointer-events: none;
 }
+
+.card.no-progress .progress { display: none; }
 
 .art-wrap {
 	width: var(--art);
