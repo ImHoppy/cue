@@ -6,9 +6,11 @@
 	let hideWhenIdle = params.get("hideWhenIdle") !== "0";
 	let hideWhenPaused = params.get("hideWhenPaused") === "1";
 	let blurBg = params.get("bg") === "blur";
+	let compact = params.get("compact") === "1";
 
 	const card = document.getElementById("card");
 	if (blurBg) card.classList.add("bg-blur");
+	if (compact) card.classList.add("compact");
 	const artBg = document.getElementById("artBg");
 	const art = document.getElementById("art");
 	const titleEl = document.getElementById("title");
@@ -119,6 +121,10 @@
 		}
 		if (typeof s.showProgress === "boolean") {
 			card.classList.toggle("no-progress", !s.showProgress);
+		}
+		if (typeof s.compact === "boolean") {
+			compact = s.compact;
+			card.classList.toggle("compact", compact);
 		}
 		if (typeof s.blur === "boolean") {
 			blurBg = s.blur;

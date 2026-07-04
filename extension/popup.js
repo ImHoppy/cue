@@ -10,6 +10,7 @@ const DEFAULT_SETTINGS = {
 	blur: false,
 	blurAmount: 26,
 	blurDark: 50,
+	compact: false,
 	showProgress: true,
 	hideWhenIdle: true,
 	hideWhenPaused: false,
@@ -29,6 +30,7 @@ const scaleInput = document.getElementById("scale");
 const scaleVal = document.getElementById("scaleVal");
 const radiusInput = document.getElementById("radius");
 const radiusVal = document.getElementById("radiusVal");
+const compactInput = document.getElementById("compact");
 const showProgressInput = document.getElementById("showProgress");
 const blurInput = document.getElementById("blur");
 const blurAmountInput = document.getElementById("blurAmount");
@@ -47,6 +49,7 @@ function readSettings() {
 		opacity: Number(opacityInput.value),
 		scale: Number(scaleInput.value),
 		radius: Number(radiusInput.value),
+		compact: compactInput.checked,
 		showProgress: showProgressInput.checked,
 		blur: blurInput.checked,
 		blurAmount: Number(blurAmountInput.value),
@@ -66,6 +69,7 @@ function applySettingsToUI(s) {
 	scaleVal.textContent = `${s.scale}%`;
 	radiusInput.value = s.radius;
 	radiusVal.textContent = `${s.radius}px`;
+	compactInput.checked = !!s.compact;
 	showProgressInput.checked = !!s.showProgress;
 	blurInput.checked = !!s.blur;
 	blurAmountInput.value = s.blurAmount;
@@ -123,7 +127,7 @@ document.getElementById("save").addEventListener("click", async () => {
 [accentInput, textColorInput, bgColorInput].forEach((el) =>
 	el.addEventListener("input", pushSettings)
 );
-[showProgressInput, blurInput, hideIdleInput, hidePausedInput].forEach((el) =>
+[compactInput, showProgressInput, blurInput, hideIdleInput, hidePausedInput].forEach((el) =>
 	el.addEventListener("change", pushSettings)
 );
 
