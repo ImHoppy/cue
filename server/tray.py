@@ -1,24 +1,43 @@
 """Optional system-tray icon so a windowless server can be closed."""
 
+import os
+import sys
+
+
+def _icon_path():
+    """Path to the bundled icon.ico (works both frozen and from source)."""
+    if getattr(sys, "frozen", False):
+        base = sys._MEIPASS
+    else:
+        base = os.path.dirname(os.path.abspath(__file__))
+    return os.path.join(base, "icon.ico")
+
+
+class _IcoImage:
+    """Minimal stand-in for a PIL.Image that just re-emits raw .ico bytes.
+
+    pystray only calls .save(fp, format=...) on the icon image, so this is all
+    the surface we need -- and it lets us skip the Pillow dependency entirely.
+    """
+
+    def __init__(self, path):
+        with open(path, "rb") as f:
+            self._data = f.read()
+
+    def save(self, fp, format=None):  # noqa: A002 - matches PIL.Image.save
+        fp.write(self._data)
+
 
 def run_tray_icon(on_quit, port):
-    """Run a system tray icon so a windowless server can be closed.
+    """Show a tray icon with a "Quit" menu item.
 
-    Returns True if the tray started (and blocks until quit), False if the
-    optional dependencies are unavailable.
+    Blocks until the user quits, then returns True. Returns False
+    when pystray unavailable.
     """
     try:
         import pystray
-        from PIL import Image, ImageDraw
     except ImportError:
         return False
-
-    # Draw a simple round "play" icon.
-    size = 64
-    image = Image.new("RGBA", (size, size), (0, 0, 0, 0))
-    draw = ImageDraw.Draw(image)
-    draw.ellipse((2, 2, size - 2, size - 2), fill=(200, 40, 40, 255))
-    draw.polygon([(24, 18), (24, 46), (48, 32)], fill=(255, 255, 255, 255))
 
     def _quit(icon, _item):
         icon.stop()
@@ -26,7 +45,7 @@ def run_tray_icon(on_quit, port):
 
     icon = pystray.Icon(
         "ytmusic-overlay-server",
-        image,
+        _IcoImage(_icon_path()),
         f"YT Music Overlay (port {port})",
         menu=pystray.Menu(
             pystray.MenuItem(f"Running on port {port}", None, enabled=False),

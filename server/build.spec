@@ -2,16 +2,23 @@ import os
 
 HERE = SPECPATH
 OVERLAY_SRC = os.path.normpath(os.path.join(HERE, "..", "overlay"))
+ICON = os.path.join(HERE, "icon.ico")
 
 a = Analysis(
     ["server.py"],
     pathex=[HERE],
     binaries=[],
-    datas=[(OVERLAY_SRC, "overlay")],  # bundle overlay/* -> _MEIPASS/overlay/*
-    hiddenimports=["pystray", "PIL", "PIL.Image", "PIL.ImageDraw"],
+    datas=[
+        (OVERLAY_SRC, "overlay"),  # bundle overlay/* -> _MEIPASS/overlay/*
+        (ICON, "."),               # tray icon, read at runtime by tray.py
+    ],
+    hiddenimports=["pystray"],
     hookspath=[],
     runtime_hooks=[],
-    excludes=[],
+    # Keep the exe small: the tray feeds pystray raw .ico bytes via a duck-typed
+    # wrapper, so Pillow is never needed. Exclude it (and other heavy stacks) so
+    # PyInstaller can't accidentally pull it in through pystray.
+    excludes=["tkinter", "PIL", "numpy"],
     noarchive=False,
 )
 
@@ -33,4 +40,5 @@ exe = EXE(
     target_arch=None,
     codesign_identity=None,
     entitlements_file=None,
+    icon=ICON,             # use the extension artwork for the exe itself
 )
