@@ -13,6 +13,17 @@ def log(*parts):
         pass
 
 
+def port_in_use(host, port):
+    """Return True if something is already listening on host:port."""
+    probe = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+    probe.settimeout(0.5)
+    try:
+        # Connecting to 0.0.0.0 doesn't work; probe loopback for wildcard binds.
+        target = "127.0.0.1" if host in ("", "0.0.0.0") else host
+        return probe.connect_ex((target, port)) == 0
+    finally:
+        probe.close()
+
 
 def is_windowed():
     """True when running without an attached console (e.g. frozen, windowless)."""
