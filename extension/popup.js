@@ -69,6 +69,7 @@ function applySettingsToUI(s) {
 	compactInput.checked = !!s.compact;
 	showProgressInput.checked = !!s.showProgress;
 	blurInput.checked = !!s.blur;
+	hidePausedInput.checked = !!s.hideWhenPaused;
 	blurAmountInput.value = s.blurAmount;
 	blurAmountVal.textContent = `${s.blurAmount}px`;
 	blurDarkInput.value = s.blurDark;
