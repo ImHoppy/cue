@@ -12,7 +12,6 @@ const DEFAULT_SETTINGS = {
 	blurDark: 50,
 	compact: false,
 	showProgress: true,
-	hideWhenIdle: true,
 	hideWhenPaused: false,
 };
 
@@ -38,7 +37,6 @@ const blurAmountVal = document.getElementById("blurAmountVal");
 const blurDarkInput = document.getElementById("blurDark");
 const blurDarkVal = document.getElementById("blurDarkVal");
 const blurOpts = document.getElementById("blurOpts");
-const hideIdleInput = document.getElementById("hideWhenIdle");
 const hidePausedInput = document.getElementById("hideWhenPaused");
 
 function readSettings() {
@@ -54,7 +52,6 @@ function readSettings() {
 		blur: blurInput.checked,
 		blurAmount: Number(blurAmountInput.value),
 		blurDark: Number(blurDarkInput.value),
-		hideWhenIdle: hideIdleInput.checked,
 		hideWhenPaused: hidePausedInput.checked,
 	};
 }
@@ -127,7 +124,7 @@ document.getElementById("save").addEventListener("click", async () => {
 [accentInput, textColorInput, bgColorInput].forEach((el) =>
 	el.addEventListener("input", pushSettings)
 );
-[compactInput, showProgressInput, blurInput, hideIdleInput, hidePausedInput].forEach((el) =>
+[compactInput, showProgressInput, blurInput, hidePausedInput].forEach((el) =>
 	el.addEventListener("change", pushSettings)
 );
 

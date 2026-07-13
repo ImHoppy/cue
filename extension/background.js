@@ -12,7 +12,6 @@ const DEFAULT_SETTINGS = {
 	blurAmount: 26,
 	blurDark: 50,
 	showProgress: true,
-	hideWhenIdle: true,
 	hideWhenPaused: false,
 };
 
