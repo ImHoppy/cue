@@ -64,19 +64,23 @@ function getArtist() {
 	return String(raw).split(/[•·]/)[0].trim() || "YouTube Music";
 }
 
+function upscaleThumbnail(url) {
+	return url.replace(/=w\d+-h\d+/, '=w544-h544');
+}
+
 function getThumbnailUrl() {
 	const queueItem = getQueueItem();
 	if (queueItem) {
 		const queueImg = queueItem.querySelector('img#img');
 		const queueSrc = queueImg?.src || queueImg?.getAttribute?.('src') || "";
-		if (queueSrc && !queueSrc.includes('data:image')) return queueSrc;
+		if (queueSrc && !queueSrc.includes('data:image')) return upscaleThumbnail(queueSrc);
 	}
 
 	const playerBar = document.querySelector('ytmusic-player-bar');
 	if (playerBar) {
 		const playerImg = playerBar.querySelector('.middle-controls img, .thumbnail img, img.yt-img-shadow');
 		const playerSrc = playerImg?.src || playerImg?.getAttribute?.('src') || "";
-		if (playerSrc && !playerSrc.includes('data:image')) return playerSrc;
+		if (playerSrc && !playerSrc.includes('data:image')) return upscaleThumbnail(playerSrc);
 	}
 
 	return "";
