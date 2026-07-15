@@ -6,15 +6,28 @@
 	let hideWhenIdle = params.get("hideWhenIdle") !== "0";
 	let hideWhenPaused = params.get("hideWhenPaused") === "1";
 	let blurBg = params.get("bg") === "blur";
-	let compact = params.get("compact") === "1";
+
+	const MODES = ["default", "compact", "cover"];
+	function normalizeMode(v) {
+		return MODES.includes(v) ? v : null;
+	}
+	let mode =
+		normalizeMode(params.get("mode")) ||
+		(params.get("compact") === "1" ? "compact" : "default");
 
 	const forced = new Set();
-	const paramToKey = { accent: "accent", bg: "blur", compact: "compact", hideWhenIdle: "hideWhenIdle", hideWhenPaused: "hideWhenPaused" };
+	const paramToKey = { accent: "accent", bg: "blur", mode: "mode", compact: "mode", hideWhenIdle: "hideWhenIdle", hideWhenPaused: "hideWhenPaused" };
 	for (const p in paramToKey) if (params.has(p)) forced.add(paramToKey[p]);
 
 	const card = document.getElementById("card");
 	if (blurBg) card.classList.add("bg-blur");
-	if (compact) card.classList.add("compact");
+
+	function applyMode(next) {
+		mode = next;
+		card.classList.toggle("compact", mode === "compact");
+		card.classList.toggle("cover", mode === "cover");
+	}
+	applyMode(mode);
 	const artBg = document.getElementById("artBg");
 	const art = document.getElementById("art");
 	const titleEl = document.getElementById("title");
@@ -144,9 +157,12 @@
 		if (typeof s.showProgress === "boolean") {
 			card.classList.toggle("no-progress", !s.showProgress);
 		}
-		if (typeof s.compact === "boolean" && !forced.has("compact")) {
-			compact = s.compact;
-			card.classList.toggle("compact", compact);
+		if (num(s.coverSize)) {
+			root.setProperty("--cover", `${Math.max(80, s.coverSize)}px`);
+		}
+		if (!forced.has("mode")) {
+			const next = normalizeMode(s.mode) || (typeof s.compact === "boolean" ? (s.compact ? "compact" : "default") : null);
+			if (next) applyMode(next);
 		}
 		if (typeof s.blur === "boolean" && !forced.has("blur")) {
 			blurBg = s.blur;

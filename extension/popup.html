@@ -12,6 +12,7 @@
 		input[type=number] { width: 70px; background: #2b2d31; border: 1px solid #3a3c41; color: #fff; border-radius: 6px; padding: 4px 6px; font-size: 12px; }
 		input[type=color] { width: 34px; height: 24px; padding: 0; border: 1px solid #3a3c41; border-radius: 6px; background: #2b2d31; cursor: pointer; }
 		input[type=range] { width: 110px; accent-color: #5865f2; }
+		select { background: #2b2d31; border: 1px solid #3a3c41; color: #fff; border-radius: 6px; padding: 4px 6px; font-size: 12px; }
 		.ctl { display: flex; align-items: center; gap: 8px; }
 		input[type=checkbox] { accent-color: #5865f2; width: 15px; height: 15px; }
 		.section { margin-top: 12px; padding-top: 10px; border-top: 1px solid #2b2d31; }
@@ -71,8 +72,21 @@
 			</span>
 		</div>
 		<div class="row">
-			<label for="compact">Compact mode (single line)</label>
-			<input id="compact" type="checkbox">
+			<label for="mode">Layout</label>
+			<select id="mode">
+				<option value="default">Default (card)</option>
+				<option value="compact">Compact (single line)</option>
+				<option value="cover">Cover art</option>
+			</select>
+		</div>
+		<div id="coverOpts" style="display:none">
+			<div class="row">
+				<label for="coverSize">— Cover size</label>
+				<span class="ctl">
+					<input id="coverSize" type="range" min="120" max="360" value="200">
+					<span class="val" id="coverSizeVal">200px</span>
+				</span>
+			</div>
 		</div>
 		<div class="row">
 			<label for="showProgress">Show progress bar</label>

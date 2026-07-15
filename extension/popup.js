@@ -10,10 +10,20 @@ const DEFAULT_SETTINGS = {
 	blur: false,
 	blurAmount: 26,
 	blurDark: 50,
-	compact: false,
+	mode: "default",
+	coverSize: 200,
 	showProgress: true,
 	hideWhenPaused: false,
 };
+
+const MODES = ["default", "compact", "cover"];
+
+function migrate(s) {
+	if (s && s.mode === undefined && typeof s.compact === "boolean") {
+		s.mode = s.compact ? "compact" : "default";
+	}
+	return s;
+}
 
 const portInput = document.getElementById("port");
 const overlayUrl = document.getElementById("overlayUrl");
@@ -29,7 +39,10 @@ const scaleInput = document.getElementById("scale");
 const scaleVal = document.getElementById("scaleVal");
 const radiusInput = document.getElementById("radius");
 const radiusVal = document.getElementById("radiusVal");
-const compactInput = document.getElementById("compact");
+const modeInput = document.getElementById("mode");
+const coverSizeInput = document.getElementById("coverSize");
+const coverSizeVal = document.getElementById("coverSizeVal");
+const coverOpts = document.getElementById("coverOpts");
 const showProgressInput = document.getElementById("showProgress");
 const blurInput = document.getElementById("blur");
 const blurAmountInput = document.getElementById("blurAmount");
@@ -47,7 +60,8 @@ function readSettings() {
 		opacity: Number(opacityInput.value),
 		scale: Number(scaleInput.value),
 		radius: Number(radiusInput.value),
-		compact: compactInput.checked,
+		mode: modeInput.value,
+		coverSize: Number(coverSizeInput.value),
 		showProgress: showProgressInput.checked,
 		blur: blurInput.checked,
 		blurAmount: Number(blurAmountInput.value),
@@ -66,7 +80,10 @@ function applySettingsToUI(s) {
 	scaleVal.textContent = `${s.scale}%`;
 	radiusInput.value = s.radius;
 	radiusVal.textContent = `${s.radius}px`;
-	compactInput.checked = !!s.compact;
+	modeInput.value = MODES.includes(s.mode) ? s.mode : DEFAULT_SETTINGS.mode;
+	coverSizeInput.value = s.coverSize;
+	coverSizeVal.textContent = `${s.coverSize}px`;
+	coverOpts.style.display = modeInput.value === "cover" ? "block" : "none";
 	showProgressInput.checked = !!s.showProgress;
 	blurInput.checked = !!s.blur;
 	hidePausedInput.checked = !!s.hideWhenPaused;
@@ -84,7 +101,9 @@ function pushSettings() {
 	radiusVal.textContent = `${s.radius}px`;
 	blurAmountVal.textContent = `${s.blurAmount}px`;
 	blurDarkVal.textContent = `${s.blurDark}%`;
+	coverSizeVal.textContent = `${s.coverSize}px`;
 	blurOpts.style.display = s.blur ? "block" : "none";
+	coverOpts.style.display = s.mode === "cover" ? "block" : "none";
 	browserAPI.runtime.sendMessage({ type: "SET_SETTINGS", payload: s });
 }
 
@@ -96,7 +115,7 @@ async function load() {
 	const port = Number(serverPort) || 8787;
 	portInput.value = port;
 	overlayUrl.textContent = `http://localhost:${port}/`;
-	applySettingsToUI({ ...DEFAULT_SETTINGS, ...(overlaySettings || {}) });
+	applySettingsToUI({ ...DEFAULT_SETTINGS, ...migrate(overlaySettings || {}) });
 
 	browserAPI.runtime.sendMessage({ type: "GET_STATUS" }, (res) => {
 		if (!res) return;
@@ -119,13 +138,13 @@ document.getElementById("save").addEventListener("click", async () => {
 	status.textContent = "Saved. Reconnecting…";
 });
 
-[opacityInput, scaleInput, radiusInput, blurAmountInput, blurDarkInput].forEach(
+[opacityInput, scaleInput, radiusInput, blurAmountInput, blurDarkInput, coverSizeInput].forEach(
 	(el) => el.addEventListener("input", pushSettings)
 );
 [accentInput, textColorInput, bgColorInput].forEach((el) =>
 	el.addEventListener("input", pushSettings)
 );
-[compactInput, showProgressInput, blurInput, hidePausedInput].forEach((el) =>
+[modeInput, showProgressInput, blurInput, hidePausedInput].forEach((el) =>
 	el.addEventListener("change", pushSettings)
 );
 

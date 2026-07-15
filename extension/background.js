@@ -11,9 +11,19 @@ const DEFAULT_SETTINGS = {
 	blur: false,
 	blurAmount: 26,
 	blurDark: 50,
+	mode: "default",
+	coverSize: 200,
 	showProgress: true,
 	hideWhenPaused: false,
 };
+
+function migrate(s) {
+	if (s && s.mode === undefined && typeof s.compact === "boolean") {
+		s.mode = s.compact ? "compact" : "default";
+	}
+	if (s) delete s.compact;
+	return s;
+}
 
 let ws = null;
 let connected = false;
@@ -33,7 +43,7 @@ async function getPort() {
 async function loadSettings() {
 	try {
 		const { overlaySettings } = await browserAPI.storage.local.get("overlaySettings");
-		settings = { ...DEFAULT_SETTINGS, ...(overlaySettings || {}) };
+		settings = { ...DEFAULT_SETTINGS, ...migrate(overlaySettings || {}) };
 	} catch {
 		settings = { ...DEFAULT_SETTINGS };
 	}
