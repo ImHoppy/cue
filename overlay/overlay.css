@@ -76,6 +76,7 @@ html, body {
 .card.no-progress .progress { display: none; }
 
 .art-wrap {
+	position: relative;
 	width: var(--art);
 	height: var(--art);
 	flex: 0 0 auto;
@@ -121,6 +122,26 @@ html, body {
 
 .bar { position: relative; width: 150px; height: 3px; border-radius: 2px; background: rgba(255, 255, 255, 0.16); overflow: hidden; }
 .fill { position: absolute; inset: 0 auto 0 0; width: 0%; background: var(--accent); border-radius: 2px; transition: width 0.4s linear; }
+
+.pause-badge { display: none; }
+.card.paused .pause-badge {
+	display: flex;
+	position: absolute;
+	inset: 0;
+	z-index: 2;
+	align-items: center;
+	justify-content: center;
+	gap: 9%;
+	background: rgba(0, 0, 0, 0.45);
+}
+.card.paused .pause-badge span {
+	width: 11%;
+	height: 34%;
+	min-width: 2px;
+	border-radius: 1px;
+	background: var(--text);
+	box-shadow: 0 1px 4px rgba(0, 0, 0, 0.5);
+}
 
 .card.cover {
 	display: block;
@@ -168,6 +189,20 @@ html, body {
 
 /* Bar sits under the scrim padding, so keep text clear of it. */
 .card.cover:not(.no-progress) .info { padding-bottom: 12px; }
+
+/* Cover mode fills the card with art, so a full-art dim would swallow the
+   whole overlay — keep the badge in the corner instead. */
+.card.cover.paused .pause-badge {
+	inset: 8px 8px auto auto;
+	gap: 3px;
+	background: none;
+}
+.card.cover.paused .pause-badge span {
+	width: 4px;
+	height: 14px;
+	min-width: 0;
+	box-shadow: 0 1px 4px rgba(0, 0, 0, 0.6);
+}
 
 .card.compact { padding: 6px 12px 6px 6px; max-width: 320px; gap: 10px; }
 .card.compact .art-wrap { width: 26px; height: 26px; border-radius: 6px; box-shadow: none; }
