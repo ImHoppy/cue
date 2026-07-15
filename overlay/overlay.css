@@ -4,13 +4,14 @@
 	--bg: rgba(var(--bg-rgb), var(--bg-alpha));
 	--accent: #ff2d55;
 	--text: #ffffff;
-	--subtext: #b9bcc4;
+	--subtext-alpha: 0.72;
 	--radius: 12px;
 	--art: 60px;
 	--cover: 200px;
 	--scale: 1;
 	--blur-amount: 26px;
 	--blur-brightness: 0.5;
+	--text-shadow: 0 1px 3px rgba(0, 0, 0, 0.65);
 }
 
 * { box-sizing: border-box; }
@@ -96,14 +97,18 @@ html, body {
 	white-space: nowrap;
 	overflow: hidden;
 	max-width: 230px;
+	text-shadow: var(--text-shadow);
 }
 
 .artist {
 	font-size: 12px;
-	color: var(--subtext);
+	font-style: italic;
+	color: var(--text);
+	opacity: var(--subtext-alpha);
 	white-space: nowrap;
 	overflow: hidden;
 	max-width: 230px;
+	text-shadow: var(--text-shadow);
 }
 
 .scroll-inner { display: inline-block; white-space: nowrap; }
@@ -117,7 +122,7 @@ html, body {
 }
 
 .progress { display: flex; align-items: center; gap: 7px; margin-top: 3px; }
-.time { font-size: 10px; font-variant-numeric: tabular-nums; color: var(--subtext); min-width: 30px; }
+.time { font-size: 10px; font-variant-numeric: tabular-nums; color: var(--text); opacity: var(--subtext-alpha); min-width: 30px; text-shadow: var(--text-shadow); }
 .time:last-child { text-align: right; }
 
 .bar { position: relative; width: 150px; height: 3px; border-radius: 2px; background: rgba(255, 255, 255, 0.16); overflow: hidden; }
@@ -209,7 +214,7 @@ html, body {
 .card.compact .info { flex-direction: row; align-items: center; gap: 5px; }
 .card.compact .title { font-size: 13px; max-width: 160px; }
 .card.compact .artist { font-size: 13px; font-weight: 500; max-width: 140px; }
-.card.compact:not(.no-artist) .artist::before { content: "•"; margin-right: 5px; color: var(--subtext); }
+.card.compact:not(.no-artist) .artist::before { content: "•"; margin-right: 5px; }
 .card.compact .progress { gap: 0; margin-left: 6px; }
 .card.compact .time { display: none; }
 .card.compact .bar { width: 45px; }
