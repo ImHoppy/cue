@@ -42,8 +42,6 @@
 	background: var(--bg);
 	border-radius: var(--radius);
 	box-shadow: 0 12px 40px rgba(0, 0, 0, 0.45);
-	backdrop-filter: blur(14px);
-	-webkit-backdrop-filter: blur(14px);
 	color: var(--text);
 	position: relative;
 	overflow: hidden;
