@@ -6,7 +6,6 @@
 	--paper: #e9ecf2;
 	--mute: #8a93a6;
 	--signal: #ffae3b;
-	--signal-dim: #7a5312;
 	--violet: #9146ff;
 	--danger: #ff6b6b;
 	--ok: #5fd08a;
@@ -30,9 +29,6 @@ body {
 	font-family: var(--body);
 	font-size: 15px;
 	line-height: 1.55;
-	/* A single lamp above the desk. */
-	background-image: radial-gradient(120% 70% at 50% -10%, rgba(255, 174, 59, 0.09), transparent 60%);
-	background-repeat: no-repeat;
 }
 
 a { color: var(--signal); text-decoration-thickness: 1px; text-underline-offset: 3px; }
@@ -73,16 +69,6 @@ a:hover { color: #ffc978; }
 	color: var(--paper);
 	text-decoration: none;
 }
-
-/* The lamp: lit when the page has a live signal to show, dim otherwise. */
-.lamp {
-	width: 8px;
-	height: 8px;
-	border-radius: 50%;
-	background: var(--signal-dim);
-	transition: background 0.4s ease, box-shadow 0.4s ease;
-}
-.lamp.lit { background: var(--signal); box-shadow: 0 0 12px rgba(255, 174, 59, 0.75); }
 
 .who { display: flex; align-items: center; gap: 10px; font-size: 13px; color: var(--mute); }
 .who img { width: 26px; height: 26px; border-radius: 50%; display: block; }

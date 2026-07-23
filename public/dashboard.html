@@ -166,8 +166,8 @@
 				const { overlayConnected } = await api("/api/me/status");
 				setLamp(overlayConnected > 0);
 				liveState.textContent = overlayConnected
-					? `${overlayConnected} browser source connected. Anything you change below lands there straight away.`
-					: "No browser source connected. Add the overlay URL below to OBS, or open the scene it lives in.";
+					? `${overlayConnected} browser source connected.`
+					: "No browser source connected.";
 			} catch {
 				/* a failed poll is not worth interrupting anyone over */
 			}
