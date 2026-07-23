@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<meta charset="utf-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1">
+	<title>Cue - music overlay</title>
+	<meta name="description" content="Put the music you're listening to on your stream as an OBS browser source. Sign in with Twitch, add one URL, done.">
+	<link rel="preconnect" href="https://fonts.googleapis.com">
+	<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+	<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wdth,wght@12..96,75..100,200..800&family=Inter+Tight:wght@400;500;600&family=JetBrains+Mono:wght@400;500&family=Plus+Jakarta+Sans:ital,wght@0,400..800;1,400..800&display=swap">
+	<link rel="stylesheet" href="/shared/overlay.css">
+	<link rel="stylesheet" href="/assets/app.css">
+</head>
+<body>
+	<header class="topbar">
+		<a class="wordmark" href="/"><span class="lamp lit"></span>Cue</a>
+		<a class="btn quiet" href="/login">Sign in</a>
+	</header>
+
+	<main class="shell">
+		<section class="hero">
+			<div>
+				<p class="eyebrow">OBS browser source</p>
+				<h1>The track you're <span class="lit-word">playing</span>, on your stream.</h1>
+				<p class="lede">
+					Cue reads what you're listening to and draws it as a card in OBS. Nothing runs
+					on your machine but the browser you already have open, and nothing to restart
+					when you go live.
+				</p>
+				<p><a class="btn twitch" href="/login">Sign in with Twitch</a></p>
+				<p class="note">Free. Cue reads your Twitch name and nothing else — no channel access, no chat, no email.</p>
+			</div>
+			<div>
+				<div class="scene" data-scene="dark" id="scene"><div class="mount" id="mount"></div></div>
+				<div class="scene-bar" id="sceneBar"></div>
+			</div>
+		</section>
+
+		<hr class="rule">
+
+		<section>
+			<h2>Three steps, once.</h2>
+			<div class="panel">
+				<div class="panel-gutter"><b>1</b><span class="rail"></span></div>
+				<div class="panel-body">
+					<div class="panel-head"><h3>Pick where your music comes from</h3></div>
+					<p class="note">YouTube Music today, through a small browser extension. Spotify is on the way.</p>
+				</div>
+			</div>
+			<div class="panel">
+				<div class="panel-gutter"><b>2</b><span class="rail"></span></div>
+				<div class="panel-body">
+					<div class="panel-head"><h3>Paste one URL into OBS</h3></div>
+					<p class="note">Add a Browser Source, paste your overlay URL, size it. That's the last time you touch OBS.</p>
+				</div>
+			</div>
+			<div class="panel">
+				<div class="panel-gutter"><b>3</b></div>
+				<div class="panel-body">
+					<div class="panel-head"><h3>Style it while it's running</h3></div>
+					<p class="note">Colour, size, layout, blur. Changes reach the overlay live — no refreshing the source mid-stream.</p>
+				</div>
+			</div>
+		</section>
+	</main>
+
+	<script type="module">
+		import { createOverlay } from "/shared/overlay-core.js";
+		import { createFakePlayer } from "/shared/fake-player.js";
+		import { toast, el } from "/assets/app.js";
+
+		// The hero is the product running, not a picture of it: the same renderer
+		// and stylesheet the OBS source loads, on a fake track.
+		const overlay = createOverlay(document.getElementById("mount"), {
+			initial: { mode: "default", accent: "#ffae3b", blur: true, blurDark: 62 },
+		});
+		createFakePlayer({ onSnapshot: (s) => overlay.applySnapshot(s) }).start();
+
+		const scene = document.getElementById("scene");
+		const bar = document.getElementById("sceneBar");
+		for (const [id, label] of [["dark", "Dark scene"], ["bright", "Bright scene"], ["grid", "Transparent"]]) {
+			const chip = el("button", "chip", label);
+			chip.type = "button";
+			chip.setAttribute("aria-pressed", String(id === "dark"));
+			chip.addEventListener("click", () => {
+				scene.dataset.scene = id;
+				bar.querySelectorAll(".chip").forEach((c) => c.setAttribute("aria-pressed", String(c === chip)));
+			});
+			bar.append(chip);
+		}
+
+		if (new URLSearchParams(location.search).get("error") === "signin") {
+			toast("Twitch sign-in did not complete. Try again.", true);
+		}
+	</script>
+</body>
+</html>

@@ -1,0 +1,20 @@
+{
+	"compilerOptions": {
+		"target": "ES2022",
+		"module": "ESNext",
+		"moduleResolution": "bundler",
+		"outDir": "dist",
+		"rootDir": ".",
+		"allowJs": true,
+		"strict": true,
+		"noUncheckedIndexedAccess": true,
+		"esModuleInterop": true,
+		"skipLibCheck": true,
+		"sourceMap": true
+	},
+	// shared/ is compiled alongside src/ so the server imports the same contract
+	// the browser downloads, rather than a copy of it. Both land under dist/ at
+	// the depth they have here, so import paths read the same before and after
+	// a build.
+	"include": ["src/**/*.ts", "shared/**/*.js"]
+}

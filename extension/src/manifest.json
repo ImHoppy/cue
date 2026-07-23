@@ -1,0 +1,27 @@
+{
+	"manifest_version": 3,
+	"name": "Cue — music on your stream",
+	"version": "2.0.0",
+	"description": "Sends the YouTube Music track you are playing to your Cue overlay in OBS.",
+	"icons": {
+		"48": "icons/icon_48x48.png",
+		"96": "icons/icon_96x96.png",
+		"128": "icons/icon_128x128.png"
+	},
+	"permissions": ["storage", "alarms", "scripting"],
+	"host_permissions": ["*://music.youtube.com/*", "__SERVER_ORIGIN__/*"],
+	"background": {
+		"type": "module"
+	},
+	"action": {
+		"default_popup": "popup.html",
+		"default_title": "Cue"
+	},
+	"content_scripts": [
+		{
+			"matches": ["*://music.youtube.com/*"],
+			"js": ["scraper.js"],
+			"run_at": "document_idle"
+		}
+	]
+}

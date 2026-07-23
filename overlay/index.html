@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" class="ytm-overlay-page">
 <head>
 	<meta charset="utf-8">
 	<meta name="viewport" content="width=device-width, initial-scale=1">
@@ -7,25 +7,10 @@
 	<link rel="preconnect" href="https://fonts.googleapis.com">
 	<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 	<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:ital,wght@0,400..800;1,400..800&display=swap">
-	<link rel="stylesheet" href="overlay.css">
+	<link rel="stylesheet" href="/shared/overlay.css">
 </head>
 <body>
-	<div id="card" class="card hidden">
-		<div id="artBg" class="art-bg"></div>
-		<div class="art-wrap">
-			<img id="art" class="art" alt="">
-			<div class="pause-badge" aria-hidden="true"><span></span><span></span></div>
-		</div>
-		<div class="info">
-			<div id="title" class="title"><span class="scroll-inner">—</span></div>
-			<div id="artist" class="artist"><span class="scroll-inner">—</span></div>
-			<div class="progress">
-				<span id="elapsed" class="time">0:00</span>
-				<div class="bar"><div id="fill" class="fill"></div></div>
-				<span id="duration" class="time">0:00</span>
-			</div>
-		</div>
-	</div>
-	<script src="overlay.js"></script>
+	<div id="overlay"></div>
+	<script type="module" src="/overlay/overlay.js"></script>
 </body>
 </html>

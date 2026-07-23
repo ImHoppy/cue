@@ -1,0 +1,10 @@
+{$SITE_ADDRESS} {
+	encode gzip
+
+	# flush_interval -1 disables response buffering, which SSE needs. Caddy also
+	# infers this from text/event-stream, but the streams are the whole product
+	# so it is stated rather than relied on.
+	reverse_proxy app:8080 {
+		flush_interval -1
+	}
+}

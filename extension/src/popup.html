@@ -1,0 +1,137 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<meta charset="utf-8">
+	<link rel="stylesheet" href="shared/overlay.css">
+	<link rel="stylesheet" href="shared/style-editor.css">
+	<style>
+		/* Same palette as the website, without the web fonts — a popup should not
+		   wait on a network request to draw. */
+		:root {
+			--ink: #0e1116;
+			--panel: #151a22;
+			--rule: #232b36;
+			--paper: #e9ecf2;
+			--mute: #8a93a6;
+			--signal: #ffae3b;
+			--danger: #ff6b6b;
+			--ok: #5fd08a;
+			--mono: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+		}
+		* { box-sizing: border-box; }
+		body {
+			/* Wide enough for the preview card at 100%: the overlay is up to 360px
+			   plus its own margin, and a clipped preview hides the very edge people
+			   are styling. Larger Size settings still overflow, which is honest —
+			   scaling the preview to fit would make the Size slider do nothing. */
+			width: 400px;
+			margin: 0;
+			padding: 14px;
+			background: var(--ink);
+			color: var(--paper);
+			font: 13px/1.5 system-ui, -apple-system, "Segoe UI", sans-serif;
+		}
+		h1 {
+			display: flex;
+			align-items: center;
+			gap: 8px;
+			margin: 0 0 12px;
+			font-size: 14px;
+			letter-spacing: -0.01em;
+		}
+		.dot { width: 8px; height: 8px; border-radius: 50%; background: var(--mute); flex: 0 0 auto; }
+		.dot.on { background: var(--ok); box-shadow: 0 0 8px rgba(95, 208, 138, 0.7); }
+		.dot.off { background: var(--danger); }
+		.state { margin-left: auto; font-size: 11px; color: var(--mute); font-weight: 400; }
+
+		section { border-top: 1px solid var(--rule); padding-top: 12px; margin-top: 12px; }
+		section:first-of-type { border-top: 0; padding-top: 0; margin-top: 0; }
+		h2 {
+			margin: 0 0 8px;
+			font-family: var(--mono);
+			font-size: 10px;
+			letter-spacing: 0.14em;
+			text-transform: uppercase;
+			color: var(--mute);
+			font-weight: 500;
+		}
+		label.field { display: block; margin-bottom: 8px; font-size: 12px; color: var(--mute); }
+		input[type=text], input[type=password] {
+			width: 100%;
+			margin-top: 4px;
+			padding: 7px 9px;
+			border: 1px solid var(--rule);
+			border-radius: 8px;
+			background: var(--panel);
+			color: var(--paper);
+			font: inherit;
+			font-size: 12px;
+		}
+		input:focus-visible, button:focus-visible, a:focus-visible { outline: 2px solid var(--signal); outline-offset: 2px; }
+		button {
+			width: 100%;
+			padding: 8px;
+			border: 1px solid var(--signal);
+			border-radius: 8px;
+			background: var(--signal);
+			color: #26170a;
+			font: inherit;
+			font-weight: 600;
+			cursor: pointer;
+		}
+		button.quiet { background: none; border-color: var(--rule); color: var(--mute); font-weight: 400; }
+		button.quiet:hover { color: var(--paper); }
+		.msg { margin-top: 8px; font-size: 11px; color: var(--mute); min-height: 14px; }
+		.msg.bad { color: var(--danger); }
+		a { color: var(--signal); font-size: 12px; }
+
+		.scene {
+			position: relative;
+			height: 120px;
+			border: 1px solid var(--rule);
+			border-radius: 8px;
+			overflow: hidden;
+			background-color: #2a2f39;
+			background-image:
+				linear-gradient(45deg, #1b1f27 25%, transparent 25%, transparent 75%, #1b1f27 75%),
+				linear-gradient(45deg, #1b1f27 25%, transparent 25%, transparent 75%, #1b1f27 75%);
+			background-size: 16px 16px;
+			background-position: 0 0, 8px 8px;
+		}
+		.scene > div { position: absolute; inset: 0; padding: 8px; }
+		.hint { margin: 6px 0 0; font-size: 11px; color: var(--mute); }
+
+		.style-editor { --se-field: var(--panel); }
+	</style>
+</head>
+<body>
+	<h1><span class="dot" id="dot"></span>Cue<span class="state" id="state">checking…</span></h1>
+
+	<section id="connect">
+		<h2>Connection</h2>
+		<label class="field">Key
+			<input id="writeKey" type="password" placeholder="paste the key from your dashboard">
+		</label>
+		<button id="save" type="button">Connect</button>
+		<p class="msg" id="msg"></p>
+		<p class="hint">
+			Sends to <b id="serverName"></b>.
+			No key? <a id="dashLink" href="#" target="_blank" rel="noopener">Open your dashboard</a> and generate one.
+		</p>
+	</section>
+
+	<section id="overlaySection" hidden>
+		<h2>Overlay URL</h2>
+		<button class="quiet" id="copyUrl" type="button">Copy overlay URL for OBS</button>
+	</section>
+
+	<section>
+		<h2>Style</h2>
+		<div class="scene"><div id="preview"></div></div>
+		<p class="hint" id="previewNote">Showing a test track.</p>
+		<div id="editor" style="margin-top:12px"></div>
+	</section>
+
+	<script type="module" src="popup.js"></script>
+</body>
+</html>

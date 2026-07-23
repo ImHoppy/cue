@@ -1,0 +1,635 @@
+:root {
+	--ink: #0e1116;
+	--panel: #151a22;
+	--panel-lift: #1b212b;
+	--rule: #232b36;
+	--paper: #e9ecf2;
+	--mute: #8a93a6;
+	--signal: #ffae3b;
+	--signal-dim: #7a5312;
+	--violet: #9146ff;
+	--danger: #ff6b6b;
+	--ok: #5fd08a;
+
+	--display: "Bricolage Grotesque", "Segoe UI", system-ui, sans-serif;
+	--body: "Inter Tight", "Segoe UI", system-ui, sans-serif;
+	--mono: "JetBrains Mono", ui-monospace, SFMono-Regular, Menlo, monospace;
+
+	--gutter: 60px;
+	--radius: 10px;
+}
+
+* { box-sizing: border-box; }
+
+html { -webkit-text-size-adjust: 100%; }
+
+body {
+	margin: 0;
+	background: var(--ink);
+	color: var(--paper);
+	font-family: var(--body);
+	font-size: 15px;
+	line-height: 1.55;
+	/* A single lamp above the desk. */
+	background-image: radial-gradient(120% 70% at 50% -10%, rgba(255, 174, 59, 0.09), transparent 60%);
+	background-repeat: no-repeat;
+}
+
+a { color: var(--signal); text-decoration-thickness: 1px; text-underline-offset: 3px; }
+a:hover { color: #ffc978; }
+
+:focus-visible {
+	outline: 2px solid var(--signal);
+	outline-offset: 3px;
+	border-radius: 3px;
+}
+
+/* ---- layout ------------------------------------------------------------- */
+
+.shell {
+	max-width: 940px;
+	margin: 0 auto;
+	padding: 0 20px 96px;
+}
+
+.topbar {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	gap: 16px;
+	max-width: 940px;
+	margin: 0 auto;
+	padding: 20px;
+}
+
+.wordmark {
+	display: inline-flex;
+	align-items: baseline;
+	gap: 9px;
+	font-family: var(--display);
+	font-weight: 700;
+	font-size: 17px;
+	letter-spacing: -0.02em;
+	color: var(--paper);
+	text-decoration: none;
+}
+
+/* The lamp: lit when the page has a live signal to show, dim otherwise. */
+.lamp {
+	width: 8px;
+	height: 8px;
+	border-radius: 50%;
+	background: var(--signal-dim);
+	transition: background 0.4s ease, box-shadow 0.4s ease;
+}
+.lamp.lit { background: var(--signal); box-shadow: 0 0 12px rgba(255, 174, 59, 0.75); }
+
+.who { display: flex; align-items: center; gap: 10px; font-size: 13px; color: var(--mute); }
+.who img { width: 26px; height: 26px; border-radius: 50%; display: block; }
+
+/* ---- type --------------------------------------------------------------- */
+
+h1, h2, h3 { font-family: var(--display); letter-spacing: -0.025em; margin: 0; }
+
+h1 {
+	font-size: clamp(38px, 7vw, 66px);
+	line-height: 0.98;
+	font-weight: 800;
+	font-variation-settings: "wdth" 85;
+}
+h2 { font-size: 21px; font-weight: 700; }
+h3 { font-size: 15px; font-weight: 600; }
+
+.eyebrow {
+	font-family: var(--mono);
+	font-size: 11px;
+	letter-spacing: 0.18em;
+	text-transform: uppercase;
+	color: var(--mute);
+}
+
+.lede { font-size: 17px; color: var(--mute); max-width: 52ch; }
+.note { font-size: 13px; color: var(--mute); }
+.note strong { color: var(--paper); font-weight: 500; }
+
+/* ---- panels ------------------------------------------------------------- */
+
+.panel {
+	display: grid;
+	grid-template-columns: var(--gutter) 1fr;
+	background: var(--panel);
+	border: 1px solid var(--rule);
+	border-radius: var(--radius);
+	margin-top: 16px;
+	overflow: hidden;
+}
+
+/* The gutter carries the step number. Setup really is a sequence, so the
+   numbering is information rather than ornament; the dashboard reuses the same
+   strip for a short label instead. */
+.panel-gutter {
+	display: flex;
+	flex-direction: column;
+	align-items: center;
+	gap: 8px;
+	padding: 22px 0;
+	border-right: 1px solid var(--rule);
+	background: linear-gradient(180deg, rgba(255, 255, 255, 0.02), transparent);
+	font-family: var(--mono);
+	font-size: 12px;
+	color: var(--mute);
+}
+.panel-gutter b {
+	font-size: 15px;
+	font-weight: 500;
+	color: var(--signal);
+}
+.panel.done .panel-gutter b { color: var(--ok); }
+.panel-gutter .rail {
+	flex: 1;
+	width: 1px;
+	background: linear-gradient(180deg, var(--rule), transparent);
+	min-height: 12px;
+}
+
+.panel-body { padding: 22px 24px 24px; min-width: 0; }
+.panel-body > * + * { margin-top: 14px; }
+.panel-head { display: flex; align-items: baseline; justify-content: space-between; gap: 12px; flex-wrap: wrap; }
+
+.panel.muted { opacity: 0.45; }
+.panel.muted .panel-body > *:not(.panel-head) { display: none; }
+
+/* ---- controls ----------------------------------------------------------- */
+
+.btn {
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	gap: 8px;
+	padding: 9px 16px;
+	border: 1px solid var(--rule);
+	border-radius: var(--radius);
+	background: var(--panel-lift);
+	color: var(--paper);
+	font: inherit;
+	font-size: 14px;
+	font-weight: 500;
+	cursor: pointer;
+	transition: background 0.15s ease, border-color 0.15s ease, transform 0.1s ease;
+}
+.btn:hover { background: #222936; border-color: #33404f; }
+.btn:active { transform: translateY(1px); }
+.btn[disabled] { opacity: 0.45; cursor: not-allowed; }
+
+.btn.primary {
+	background: var(--signal);
+	border-color: var(--signal);
+	color: #26170a;
+	font-weight: 600;
+}
+.btn.primary:hover { background: #ffc061; border-color: #ffc061; }
+
+.btn.danger { color: var(--danger); border-color: #4a2b2b; }
+.btn.danger:hover { background: #2a1a1a; border-color: var(--danger); }
+
+.btn.quiet { background: none; color: var(--mute); }
+.btn.quiet:hover { color: var(--paper); }
+
+.btn.twitch {
+	background: var(--violet);
+	border-color: var(--violet);
+	color: #fff;
+	font-size: 15px;
+	padding: 12px 22px;
+}
+.btn.twitch:hover { background: #a970ff; border-color: #a970ff; }
+
+.row { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+
+/* ---- copyable values ---------------------------------------------------- */
+
+.copyfield {
+	display: flex;
+	align-items: stretch;
+	gap: 0;
+	border: 1px solid var(--rule);
+	border-radius: var(--radius);
+	background: var(--ink);
+	overflow: hidden;
+}
+.copyfield code {
+	flex: 1 1 auto;
+	min-width: 0;
+	padding: 10px 12px;
+	font-family: var(--mono);
+	font-size: 12.5px;
+	color: var(--paper);
+	overflow-x: auto;
+	white-space: nowrap;
+	scrollbar-width: thin;
+}
+.copyfield code.masked { color: var(--mute); letter-spacing: 0.05em; }
+.copyfield button {
+	flex: 0 0 auto;
+	padding: 0 14px;
+	border: 0;
+	border-left: 1px solid var(--rule);
+	background: var(--panel-lift);
+	color: var(--mute);
+	font: inherit;
+	font-size: 12px;
+	cursor: pointer;
+}
+.copyfield button:hover { color: var(--paper); background: #222936; }
+
+.label {
+	display: block;
+	margin-bottom: 6px;
+	font-family: var(--mono);
+	font-size: 10.5px;
+	letter-spacing: 0.14em;
+	text-transform: uppercase;
+	color: var(--mute);
+}
+
+/* ---- choices (providers, browsers) -------------------------------------- */
+
+.choices { display: grid; grid-template-columns: repeat(auto-fit, minmax(230px, 1fr)); gap: 12px; }
+
+.choice {
+	display: block;
+	width: 100%;
+	text-align: left;
+	padding: 16px;
+	border: 1px solid var(--rule);
+	border-radius: var(--radius);
+	background: var(--ink);
+	color: inherit;
+	font: inherit;
+	cursor: pointer;
+	transition: border-color 0.15s ease, background 0.15s ease;
+}
+.choice:hover:not([disabled]) { border-color: var(--signal); background: #171c25; }
+.choice[aria-pressed="true"] { border-color: var(--signal); background: #1c1710; }
+.choice[disabled] { cursor: not-allowed; opacity: 0.5; }
+.choice h3 { margin-bottom: 4px; }
+.choice p { margin: 0; font-size: 13px; color: var(--mute); }
+.choice .tag {
+	float: right;
+	font-family: var(--mono);
+	font-size: 10px;
+	letter-spacing: 0.12em;
+	text-transform: uppercase;
+	color: var(--mute);
+	border: 1px solid var(--rule);
+	border-radius: 20px;
+	padding: 2px 8px;
+}
+
+ol.steps { margin: 0; padding-left: 20px; font-size: 14px; color: var(--mute); }
+ol.steps li { margin: 5px 0; }
+ol.steps code, p code, li code {
+	font-family: var(--mono);
+	font-size: 12.5px;
+	color: var(--paper);
+	background: var(--ink);
+	border: 1px solid var(--rule);
+	border-radius: 5px;
+	padding: 1px 5px;
+}
+
+/* ---- style studio: preview beside the controls -------------------------- */
+
+.studio { display: grid; grid-template-columns: 1fr 300px; gap: 20px; align-items: start; }
+
+.scene {
+	position: relative;
+	min-height: 260px;
+	border: 1px solid var(--rule);
+	border-radius: var(--radius);
+	overflow: hidden;
+	background: #0b0d11;
+}
+/* Three backdrops, because an overlay that reads on a dark scene can vanish on
+   a bright one and OBS composites it over transparency either way. */
+.scene[data-scene="dark"] { background: linear-gradient(140deg, #0b0d11, #171d28 60%, #0d1620); }
+.scene[data-scene="bright"] { background: linear-gradient(140deg, #d8dbe2, #f2f3f6 55%, #c9cfda); }
+.scene[data-scene="grid"] {
+	background-color: #2a2f39;
+	background-image:
+		linear-gradient(45deg, #1b1f27 25%, transparent 25%, transparent 75%, #1b1f27 75%),
+		linear-gradient(45deg, #1b1f27 25%, transparent 25%, transparent 75%, #1b1f27 75%);
+	background-size: 20px 20px;
+	background-position: 0 0, 10px 10px;
+}
+.scene .mount { position: absolute; inset: 0; padding: 14px; }
+
+.scene-bar {
+	display: flex;
+	align-items: center;
+	gap: 6px;
+	margin-top: 10px;
+	flex-wrap: wrap;
+}
+.chip {
+	padding: 5px 10px;
+	border: 1px solid var(--rule);
+	border-radius: 20px;
+	background: none;
+	color: var(--mute);
+	font: inherit;
+	font-size: 12px;
+	cursor: pointer;
+}
+.chip[aria-pressed="true"] { color: var(--ink); background: var(--signal); border-color: var(--signal); }
+.chip:hover:not([aria-pressed="true"]) { color: var(--paper); border-color: var(--mute); }
+.chip.spacer { border: 0; background: none; cursor: default; margin-left: auto; font-family: var(--mono); font-size: 11px; }
+
+/* ---- hero --------------------------------------------------------------- */
+
+.hero {
+	display: grid;
+	grid-template-columns: 1fr 1fr;
+	gap: 40px;
+	align-items: center;
+	padding: 48px 0 20px;
+}
+.hero > div > * + * { margin-top: 18px; }
+.hero .scene { min-height: 300px; }
+.hero h1 .lit-word { color: var(--signal); }
+
+@media (max-width: 860px) {
+	.hero { grid-template-columns: 1fr; gap: 28px; padding-top: 28px; }
+}
+
+/* ---- toast -------------------------------------------------------------- */
+
+.toast {
+	position: fixed;
+	left: 50%;
+	bottom: 26px;
+	transform: translate(-50%, 12px);
+	padding: 10px 18px;
+	border: 1px solid var(--rule);
+	border-radius: 20px;
+	background: var(--panel-lift);
+	color: var(--paper);
+	font-size: 13px;
+	box-shadow: 0 12px 40px rgba(0, 0, 0, 0.5);
+	opacity: 0;
+	pointer-events: none;
+	transition: opacity 0.2s ease, transform 0.2s ease;
+	z-index: 50;
+}
+.toast.show { opacity: 1; transform: translate(-50%, 0); }
+.toast.bad { border-color: var(--danger); color: #ffd5d5; }
+
+/* ---- reveal (one-time key display) -------------------------------------- */
+
+.reveal {
+	border: 1px solid var(--signal);
+	border-radius: var(--radius);
+	background: #1c1710;
+	padding: 16px;
+}
+.reveal .warn { color: var(--signal); font-size: 13px; margin: 0 0 10px; }
+
+hr.rule { border: 0; border-top: 1px solid var(--rule); margin: 22px 0; }
+
+/* ---- charts ------------------------------------------------------------- */
+
+/**
+ * Chart tokens, scoped so the surface the marks are measured against is the one
+ * they actually render on (the panel, not the page).
+ *
+ * The ordinal ramp is validated: one hue, monotone lightness, adjacent ΔL ≥ 0.06,
+ * and its surface-nearest step at 2.92:1 against #151a22. It encodes funnel
+ * *stage order*, never magnitude — bar length already carries the value.
+ * Nominal bars all take --series-1, because ramping a nominal category would
+ * double-encode length as hue.
+ */
+.viz {
+	--viz-surface: var(--panel);
+	--series-1: #ffae3b;
+	--ordinal-1: #ffce87;
+	--ordinal-2: #ffae3b;
+	--ordinal-3: #e08f1c;
+	--ordinal-4: #b87113;
+	--ordinal-5: #8f5610;
+	--viz-grid: #232b36;
+	--viz-baseline: #2f3947;
+	--viz-track: #1b212b;
+}
+
+/* Exactly one per view: the number the page leads with. Sans, not the display
+   face, and proportional figures — tabular digits look loose this large. */
+.hero-figure {
+	display: block;
+	font-family: var(--body);
+	font-size: clamp(52px, 9vw, 84px);
+	font-weight: 600;
+	line-height: 1;
+	letter-spacing: -0.03em;
+	color: var(--paper);
+}
+.hero-figure + .hero-label { margin-top: 6px; font-size: 15px; color: var(--mute); }
+
+.kpis {
+	display: grid;
+	grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+	gap: 12px;
+	margin-top: 20px;
+}
+.tile {
+	padding: 14px 16px;
+	border: 1px solid var(--rule);
+	border-radius: var(--radius);
+	background: var(--panel);
+}
+.tile .tile-label { font-size: 12.5px; color: var(--mute); }
+.tile .tile-value {
+	display: block;
+	margin-top: 4px;
+	font-size: 30px;
+	font-weight: 600;
+	line-height: 1.1;
+	letter-spacing: -0.02em;
+}
+.tile .tile-delta { font-size: 12px; color: var(--mute); }
+.tile .tile-delta .up { color: var(--ok); }
+.tile .tile-delta .down { color: var(--danger); }
+
+.chart-head {
+	display: flex;
+	align-items: baseline;
+	justify-content: space-between;
+	gap: 12px;
+	margin-bottom: 4px;
+}
+.chart-sub { font-size: 12.5px; color: var(--mute); margin: 0 0 16px; }
+
+.chart-toggle {
+	padding: 4px 10px;
+	border: 1px solid var(--rule);
+	border-radius: 20px;
+	background: none;
+	color: var(--mute);
+	font: inherit;
+	font-size: 11.5px;
+	cursor: pointer;
+}
+.chart-toggle:hover { color: var(--paper); border-color: var(--mute); }
+
+/* ---- column chart (counts over days) ---- */
+
+.columns {
+	position: relative;
+	display: grid;
+	grid-auto-flow: column;
+	grid-auto-columns: 1fr;
+	align-items: end;
+	height: 150px;
+	padding-top: 18px;   /* room for the one direct label */
+	border-bottom: 1px solid var(--viz-baseline);
+}
+.col-slot {
+	position: relative;
+	display: flex;
+	align-items: flex-end;
+	justify-content: center;
+	height: 100%;
+	cursor: default;
+}
+.col-bar {
+	width: 100%;
+	max-width: 14px;                  /* ≤24px, and the slot's leftover stays air */
+	min-height: 0;
+	background: var(--series-1);
+	border-radius: 4px 4px 0 0;       /* rounded data-end, square at the baseline */
+}
+.col-slot:hover .col-bar { background: #ffc061; }
+/* Rides its own bar — `bottom` is set from the bar's height in JS, because a
+   label pinned to the slot would float at the top of the plot and read as
+   another axis tick. */
+.col-peak {
+	position: absolute;
+	font-size: 11px;
+	line-height: 1;
+	color: var(--paper);
+	font-variant-numeric: tabular-nums;
+}
+/* Gridlines sit behind the marks, hairline and solid — never dashed. */
+.col-grid { position: absolute; inset: 18px 0 0; pointer-events: none; }
+.col-grid span {
+	position: absolute;
+	left: 0;
+	right: 0;
+	border-top: 1px solid var(--viz-grid);
+}
+.col-grid span b {
+	position: absolute;
+	left: 0;
+	top: -8px;
+	font-family: var(--mono);
+	font-size: 10px;
+	font-weight: 400;
+	color: var(--mute);
+	background: var(--panel);
+	padding-right: 6px;
+	font-variant-numeric: tabular-nums;
+}
+.col-axis {
+	display: flex;
+	justify-content: space-between;
+	margin-top: 8px;
+	font-family: var(--mono);
+	font-size: 10.5px;
+	color: var(--mute);
+}
+
+/* ---- horizontal bars (funnel, nominal breakdowns) ---- */
+
+.hbars { display: flex; flex-direction: column; gap: 12px; }
+.hbar { display: grid; grid-template-columns: minmax(0, 170px) 1fr auto; align-items: center; gap: 12px; }
+.hbar-label { font-size: 13px; color: var(--mute); min-width: 0; }
+.hbar-track {
+	position: relative;
+	height: 10px;
+	border-radius: 5px;
+	background: var(--viz-track);
+	overflow: hidden;
+}
+.hbar-fill {
+	height: 100%;
+	min-width: 2px;
+	border-radius: 0 4px 4px 0;   /* rounded data-end, square at the baseline */
+	background: var(--series-1);
+}
+.hbar-value {
+	font-size: 13px;
+	font-variant-numeric: tabular-nums;
+	color: var(--paper);
+	white-space: nowrap;
+}
+.hbar-value small { color: var(--mute); margin-left: 5px; font-size: 11.5px; }
+
+/* ---- tooltip ---- */
+
+.viz-tip {
+	position: fixed;
+	z-index: 60;
+	padding: 7px 10px;
+	border: 1px solid var(--rule);
+	border-radius: 8px;
+	background: var(--panel-lift);
+	font-size: 12px;
+	line-height: 1.4;
+	color: var(--paper);
+	pointer-events: none;
+	opacity: 0;
+	transition: opacity 0.12s ease;
+	box-shadow: 0 8px 28px rgba(0, 0, 0, 0.55);
+	white-space: nowrap;
+}
+.viz-tip.show { opacity: 1; }
+.viz-tip b { font-family: var(--mono); font-weight: 500; }
+
+.two-up { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+@media (max-width: 700px) {
+	.two-up { grid-template-columns: 1fr; }
+	.hbar { grid-template-columns: minmax(0, 120px) 1fr auto; gap: 8px; }
+}
+
+/* ---- admin table -------------------------------------------------------- */
+
+.tablewrap { overflow-x: auto; margin-top: 20px; border: 1px solid var(--rule); border-radius: var(--radius); }
+table { border-collapse: collapse; width: 100%; font-size: 13.5px; }
+th, td { text-align: left; padding: 10px 14px; border-bottom: 1px solid var(--rule); white-space: nowrap; }
+th {
+	font-family: var(--mono);
+	font-size: 10.5px;
+	letter-spacing: 0.14em;
+	text-transform: uppercase;
+	color: var(--mute);
+	background: var(--panel);
+}
+tr:last-child td { border-bottom: 0; }
+td.mono { font-family: var(--mono); font-size: 12px; color: var(--mute); }
+td img { width: 22px; height: 22px; border-radius: 50%; vertical-align: middle; margin-right: 8px; }
+
+/* ---- responsive --------------------------------------------------------- */
+
+@media (max-width: 760px) {
+	.studio { grid-template-columns: 1fr; }
+	.panel { grid-template-columns: 40px 1fr; }
+	.panel-body { padding: 18px 16px 20px; }
+	:root { --gutter: 40px; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+	*, *::before, *::after {
+		animation-duration: 0.01ms !important;
+		animation-iteration-count: 1 !important;
+		transition-duration: 0.01ms !important;
+	}
+}

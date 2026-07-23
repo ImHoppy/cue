@@ -1,0 +1,191 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<meta charset="utf-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1">
+	<title>Cue - Admin</title>
+	<link rel="preconnect" href="https://fonts.googleapis.com">
+	<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+	<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wdth,wght@12..96,75..100,200..800&family=Inter+Tight:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap">
+	<link rel="stylesheet" href="/assets/app.css">
+</head>
+<body class="viz">
+	<header class="topbar">
+		<a class="wordmark" href="/dashboard"><span class="lamp" id="lamp"></span>Cue</a>
+		<span class="who">
+			<a class="btn quiet" href="/dashboard">Back to your overlay</a>
+		</span>
+	</header>
+
+	<main class="shell">
+		<p class="eyebrow">Admin</p>
+
+		<section>
+			<strong class="hero-figure" id="heroValue">—</strong>
+			<p class="hero-label" id="heroLabel">browser sources connected right now</p>
+			<p class="note" id="liveLine">Loading…</p>
+		</section>
+
+		<div class="kpis" id="kpis"></div>
+
+		<section class="panel">
+			<div class="panel-gutter"><span>growth</span><span class="rail"></span></div>
+			<div class="panel-body">
+				<div class="chart-head">
+					<h2>New accounts</h2>
+					<button class="chart-toggle" id="signupToggle" type="button">Table</button>
+				</div>
+				<p class="chart-sub" id="signupSub">Last 30 days</p>
+				<div id="signupChart"></div>
+			</div>
+		</section>
+
+		<section class="panel">
+			<div class="panel-gutter"><span>funnel</span><span class="rail"></span></div>
+			<div class="panel-body">
+				<div class="chart-head"><h2>How far people get</h2></div>
+				<p class="chart-sub">Each step of setup, in the order it is presented. A drop between two rows is where people give up.</p>
+				<div id="funnelChart"></div>
+			</div>
+		</section>
+
+		<section class="panel">
+			<div class="panel-gutter"><span>style</span><span class="rail"></span></div>
+			<div class="panel-body">
+				<div class="chart-head"><h2>What people run</h2></div>
+				<p class="chart-sub">Counted across every account, including those still on the defaults.</p>
+				<div class="two-up">
+					<div>
+						<p class="label">Layout</p>
+						<div id="modeChart"></div>
+					</div>
+					<div>
+						<p class="label">Options turned on</p>
+						<div id="toggleChart"></div>
+					</div>
+				</div>
+			</div>
+		</section>
+
+		<section class="panel">
+			<div class="panel-gutter"><span>who</span></div>
+			<div class="panel-body">
+				<div class="chart-head"><h2>Accounts</h2></div>
+				<p class="chart-sub" id="usersSub"></p>
+				<div class="tablewrap"><table id="users"></table></div>
+			</div>
+		</section>
+	</main>
+
+	<script type="module">
+		import { api, el, setLamp, providerById } from "/assets/app.js";
+		import { barChart, columnChart, columnTable, formatCount, formatDuration, statTile } from "/assets/charts.js";
+
+		const [stats, roster] = await Promise.all([api("/api/admin/stats"), api("/api/admin/users")]);
+		const { live, totals, activity, funnel, signups, style } = stats;
+
+		// ---- the one hero number --------------------------------------------
+		document.getElementById("heroValue").textContent = formatCount(live.clients);
+		document.getElementById("heroLabel").textContent =
+			live.clients === 1 ? "browser source connected right now" : "browser sources connected right now";
+		setLamp(live.clients > 0);
+
+		document.getElementById("liveLine").innerHTML = [
+			`<strong>${live.producing}</strong> extension${live.producing === 1 ? "" : "s"} reporting`,
+			`<strong>${live.playing}</strong> playing a track`,
+			`peak <strong>${live.peakClients}</strong> since restart`,
+			`up ${formatDuration(live.uptimeMs)} · ${formatCount(live.presenceMessages)} presence messages`,
+		].join(" · ");
+
+		// ---- KPI row ---------------------------------------------------------
+		const setupDone = funnel.find((f) => f.label === "Finished setup")?.count ?? 0;
+		document.getElementById("kpis").append(
+			statTile({ label: "Accounts", value: totals.users }),
+			statTile({ label: "Finished setup", value: setupDone }),
+			statTile({
+				label: "New this week",
+				value: activity.new7d,
+				delta: { current: activity.new7d, previous: activity.prev7d, period: "the week before" },
+			}),
+			statTile({ label: "Played music in 24h", value: activity.playing24h })
+		);
+
+		// ---- signups ---------------------------------------------------------
+		const signupChart = document.getElementById("signupChart");
+		const signupToggle = document.getElementById("signupToggle");
+		document.getElementById("signupSub").textContent =
+			`Last 30 days · ${activity.new30d} total · ${activity.signedIn7d} signed in this week`;
+
+		let asTable = false;
+		function drawSignups() {
+			if (asTable) columnTable(signupChart, signups, "account");
+			else columnChart(signupChart, signups, "account");
+			signupToggle.textContent = asTable ? "Chart" : "Table";
+		}
+		signupToggle.addEventListener("click", () => {
+			asTable = !asTable;
+			drawSignups();
+		});
+		drawSignups();
+
+		// ---- funnel ----------------------------------------------------------
+		// Ordered stages, so the ordinal ramp is legitimate here: it tracks
+		// position in the sequence, and bar length carries the count.
+		const ramp = [1, 2, 3, 4, 5].map((i) =>
+			getComputedStyle(document.body).getPropertyValue(`--ordinal-${i}`).trim()
+		);
+		barChart(document.getElementById("funnelChart"), funnel, {
+			total: totals.users,
+			ramp,
+			percent: true,
+		});
+
+		// ---- style breakdowns ------------------------------------------------
+		// Nominal rows: one hue for every bar, never a ramp.
+		const modeNames = { default: "Card", compact: "Single line", cover: "Cover art" };
+		barChart(
+			document.getElementById("modeChart"),
+			style.modes.map((m) => ({ label: modeNames[m.mode] ?? m.mode, count: m.count })),
+			{ total: totals.users, percent: true }
+		);
+		barChart(document.getElementById("toggleChart"), style.toggles, { total: totals.users, percent: true });
+
+		// ---- roster ----------------------------------------------------------
+		const users = roster.users;
+		document.getElementById("usersSub").textContent =
+			`${users.length} total · ${totals.providers.map((p) => `${p.count} ${p.provider === "none" ? "no source picked" : providerById(p.provider)?.name ?? p.provider}`).join(" · ")}`;
+
+		const table = document.getElementById("users");
+		const head = el("tr");
+		for (const h of ["Streamer", "Twitch id", "Source", "Setup", "Last track", "Overlay", "Signed in"]) {
+			head.append(el("th", null, h));
+		}
+		table.append(head);
+
+		const ago = (ms) => {
+			if (!ms) return "never";
+			const mins = Math.round((Date.now() - ms) / 60000);
+			if (mins < 60) return `${mins}m ago`;
+			if (mins < 2880) return `${Math.round(mins / 60)}h ago`;
+			return `${Math.round(mins / 1440)}d ago`;
+		};
+
+		for (const u of users) {
+			const row = el("tr");
+			const name = el("td");
+			if (u.avatarUrl) name.append(Object.assign(new Image(), { src: u.avatarUrl, alt: "" }));
+			name.append(el("span", null, u.displayName));
+			row.append(
+				name,
+				el("td", "mono", u.twitchId),
+				el("td", null, u.provider ? providerById(u.provider)?.name ?? u.provider : "—"),
+				el("td", null, u.setupDone ? "done" : "unfinished"),
+				el("td", "mono", ago(u.lastSeenAt)),
+				el("td", "mono", u.overlaySeenAt ? "seen" : "never"),
+				el("td", "mono", ago(u.lastLoginAt))
+			);
+			table.append(row);
+		}
+	</script>
+</body>
+</html>

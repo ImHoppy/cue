@@ -1,6 +1,0 @@
-# Python / PyInstaller build artifacts
-__pycache__/
-*.pyc
-build/
-dist/
-*.log
