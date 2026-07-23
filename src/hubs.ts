@@ -101,6 +101,12 @@ export function dropHub(readKey: string) {
 /** How many browser sources are currently attached — what lights the dashboard lamp. */
 export const clientsFor = (readKey: string) => hubs.get(readKey)?.clients.size ?? 0;
 
+export function readKeysWithClients(): string[] {
+	const keys: string[] = [];
+	for (const [readKey, hub] of hubs) if (hub.clients.size > 0) keys.push(readKey);
+	return keys;
+}
+
 export function hubStats() {
 	const now = Date.now();
 	let clients = 0;

@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { spotifyEnabled } from "./config.js";
 import {
 	DEFAULT_SETTINGS,
 	IDLE_SNAPSHOT,
@@ -37,7 +38,12 @@ export const presenceSchema = z.discriminatedUnion("type", [
 
 export type Snapshot = z.infer<typeof snapshotSchema>;
 
-export const providerIds = PROVIDERS.map((p: { id: string }) => p.id);
-export const availableProviderIds = PROVIDERS.filter((p: { available: boolean }) => p.available).map(
-	(p: { id: string }) => p.id
-);
+export type Provider = { id: string; transport: string; available: boolean };
+
+export const providerIds = PROVIDERS.map((p: Provider) => p.id);
+export const transportFor = (id: string | null) =>
+	PROVIDERS.find((p: Provider) => p.id === id)?.transport ?? null;
+
+export const availableProviderIds = PROVIDERS.filter(
+	(p: Provider) => p.available && (p.id !== "spotify" || spotifyEnabled)
+).map((p: Provider) => p.id);

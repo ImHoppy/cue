@@ -3,14 +3,26 @@ import formbody from "@fastify/formbody";
 import rateLimit from "@fastify/rate-limit";
 import fastifyStatic from "@fastify/static";
 import Fastify, { type FastifyReply } from "fastify";
-import { cookieSecret, host, overlayDir, port, publicDir, publicUrl, sharedDir } from "./config.js";
+import {
+	cookieSecret,
+	host,
+	overlayDir,
+	port,
+	publicDir,
+	publicUrl,
+	sharedDir,
+	spotifyEnabled,
+	spotifyRedirectUri,
+} from "./config.js";
 import { readKeyIsLive } from "./db.js";
 import { hubStats, startHubTimers } from "./hubs.js";
 import { registerAccount } from "./routes/account.js";
 import { registerAdmin } from "./routes/admin.js";
 import { registerPages } from "./routes/pages.js";
 import { registerPresence } from "./routes/presence.js";
+import { registerSpotify } from "./routes/spotify.js";
 import { registerStream } from "./routes/stream.js";
+import { startSpotifyPoller } from "./spotify-poll.js";
 
 const app = Fastify({
 	logger: { level: process.env.LOG_LEVEL ?? "info" },
@@ -68,10 +80,13 @@ app.get<{ Querystring: { key?: string } }>("/overlay/", async (req, reply) => {
 registerPages(app);
 registerAccount(app);
 registerPresence(app);
+registerSpotify(app);
 registerStream(app);
 registerAdmin(app);
 
 startHubTimers();
+startSpotifyPoller(app.log);
 
 await app.listen({ port, host });
 app.log.info(`site: ${publicUrl}`);
+if (spotifyEnabled) app.log.info(`spotify redirect uri: ${spotifyRedirectUri}`);

@@ -1,19 +1,26 @@
 export const MODES = ["default", "compact", "cover"];
 
+/**
+ * Where the music comes from. `extension` providers push presence with a write
+ * key; `account` providers are polled by the server from a linked account, so
+ * setup asks for a sign-in instead of a key.
+ */
 export const PROVIDERS = [
 	{
 		id: "youtube-music",
 		name: "YouTube Music",
 		tagline: "Reads the tab you already have open.",
 		how: "A browser extension watches music.youtube.com and sends the track to your overlay.",
+		transport: "extension",
 		available: true,
 	},
 	{
 		id: "spotify",
 		name: "Spotify",
 		tagline: "Connects to your Spotify account.",
-		how: "Sign in once and the server polls your playback — no extension, works with the desktop app.",
-		available: false,
+		how: "Sign in once and the server reads your playback — no extension, works with the desktop app and your phone.",
+		transport: "account",
+		available: true,
 	},
 ];
 

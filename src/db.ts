@@ -3,6 +3,7 @@ import { createHash, randomBytes } from "node:crypto";
 import { mkdirSync } from "node:fs";
 import { dirname } from "node:path";
 import { DEFAULT_SETTINGS, normalizeSettings, type Settings } from "./contract.js";
+import { seal, unseal } from "./secrets.js";
 
 export type User = {
 	id: number;
@@ -22,6 +23,25 @@ export type Keys = {
 	read_key: string;
 	created_at: number;
 	rotated_at: number | null;
+};
+
+type SpotifyRow = {
+	user_id: number;
+	spotify_id: string;
+	display_name: string | null;
+	access_token: string;
+	refresh_token: string;
+	expires_at: number;
+	linked_at: number;
+};
+
+export type SpotifyLink = {
+	userId: number;
+	spotifyId: string;
+	displayName: string | null;
+	accessToken: string;
+	refreshToken: string;
+	expiresAt: number;
 };
 
 const dbPath = process.env.DB_PATH ?? "./data/app.db";
@@ -55,6 +75,15 @@ db.exec(`
 		user_id    INTEGER PRIMARY KEY REFERENCES users(id) ON DELETE CASCADE,
 		json       TEXT    NOT NULL,
 		updated_at INTEGER NOT NULL
+	);
+	CREATE TABLE IF NOT EXISTS spotify_accounts (
+		user_id       INTEGER PRIMARY KEY REFERENCES users(id) ON DELETE CASCADE,
+		spotify_id    TEXT    NOT NULL,
+		display_name  TEXT,
+		access_token  TEXT    NOT NULL,
+		refresh_token TEXT    NOT NULL,
+		expires_at    INTEGER NOT NULL,
+		linked_at     INTEGER NOT NULL
 	);
 `);
 
@@ -107,6 +136,30 @@ const q = {
 			rotated_at = excluded.created_at`
 	),
 	setReadKey: db.prepare("UPDATE user_keys SET read_key = ?, rotated_at = ? WHERE user_id = ?"),
+
+	linkSpotify: db.prepare(
+		`INSERT INTO spotify_accounts (user_id, spotify_id, display_name, access_token, refresh_token, expires_at, linked_at)
+		 VALUES (@userId, @spotifyId, @displayName, @access, @refresh, @expiresAt, @now)
+		 ON CONFLICT(user_id) DO UPDATE SET
+			spotify_id = excluded.spotify_id,
+			display_name = excluded.display_name,
+			access_token = excluded.access_token,
+			refresh_token = excluded.refresh_token,
+			expires_at = excluded.expires_at,
+			linked_at = excluded.linked_at`
+	),
+	updateSpotifyTokens: db.prepare(
+		"UPDATE spotify_accounts SET access_token = ?, refresh_token = ?, expires_at = ? WHERE user_id = ?"
+	),
+	unlinkSpotify: db.prepare("DELETE FROM spotify_accounts WHERE user_id = ?"),
+	spotifyByUser: db.prepare<[number], SpotifyRow>("SELECT * FROM spotify_accounts WHERE user_id = ?"),
+	spotifyByReadKey: db.prepare<[string], SpotifyRow & { provider: string | null }>(
+		`SELECT s.*, u.provider
+		 FROM user_keys k
+		 JOIN users u ON u.id = k.user_id
+		 JOIN spotify_accounts s ON s.user_id = k.user_id
+		 WHERE k.read_key = ?`
+	),
 
 	getSettings: db.prepare<[number], { json: string }>("SELECT json FROM user_settings WHERE user_id = ?"),
 	putSettings: db.prepare(
@@ -168,6 +221,13 @@ export function issueKeys(userId: number): { writeKey: string; readKey: string }
 	return { writeKey, readKey };
 }
 
+export function ensureKeys(userId: number): Keys {
+	const existing = q.keysByUser.get(userId);
+	if (existing) return existing;
+	issueKeys(userId);
+	return q.keysByUser.get(userId)!;
+}
+
 export function rotateReadKey(userId: number): string | null {
 	if (!q.keysByUser.get(userId)) return null;
 	const next = token();
@@ -184,6 +244,57 @@ export function resolveWriteKey(writeKey: string): Keys | null {
 
 export const userIdForReadKey = (readKey: string) => q.keysByReadKey.get(readKey)?.user_id ?? null;
 export const readKeyIsLive = (readKey: string) => !!q.keysByReadKey.get(readKey);
+
+function toLink(row: SpotifyRow | undefined): SpotifyLink | null {
+	if (!row) return null;
+	const accessToken = unseal(row.access_token);
+	const refreshToken = unseal(row.refresh_token);
+	if (!accessToken || !refreshToken) {
+		q.unlinkSpotify.run(row.user_id);
+		return null;
+	}
+	return {
+		userId: row.user_id,
+		spotifyId: row.spotify_id,
+		displayName: row.display_name,
+		accessToken,
+		refreshToken,
+		expiresAt: row.expires_at,
+	};
+}
+
+export function linkSpotify(link: {
+	userId: number;
+	spotifyId: string;
+	displayName: string | null;
+	accessToken: string;
+	refreshToken: string;
+	expiresAt: number;
+}) {
+	q.linkSpotify.run({
+		userId: link.userId,
+		spotifyId: link.spotifyId,
+		displayName: link.displayName,
+		access: seal(link.accessToken),
+		refresh: seal(link.refreshToken),
+		expiresAt: link.expiresAt,
+		now: Date.now(),
+	});
+}
+
+export function updateSpotifyTokens(userId: number, accessToken: string, refreshToken: string, expiresAt: number) {
+	q.updateSpotifyTokens.run(seal(accessToken), seal(refreshToken), expiresAt, userId);
+}
+
+export const unlinkSpotify = (userId: number) => void q.unlinkSpotify.run(userId);
+
+export const spotifyForUser = (userId: number) => toLink(q.spotifyByUser.get(userId));
+
+export function spotifyForReadKey(readKey: string): SpotifyLink | null {
+	const row = q.spotifyByReadKey.get(readKey);
+	if (!row || row.provider !== "spotify") return null;
+	return toLink(row);
+}
 
 export function loadSettings(userId: number): Settings {
 	const row = q.getSettings.get(userId);

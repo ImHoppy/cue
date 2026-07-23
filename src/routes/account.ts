@@ -4,8 +4,9 @@ import { join } from "node:path";
 import { z } from "zod";
 import { currentUser, isAdmin, requireUser } from "../auth.js";
 import { downloadsDir, publicUrl } from "../config.js";
-import { availableProviderIds, normalizeSettings } from "../contract.js";
+import { availableProviderIds, normalizeSettings, transportFor } from "../contract.js";
 import {
+	ensureKeys,
 	issueKeys,
 	keysForUser,
 	loadSettings,
@@ -13,6 +14,7 @@ import {
 	saveSettings,
 	setProvider,
 	setSetupDone,
+	spotifyForUser,
 	type User,
 } from "../db.js";
 import { clientsFor, dropHub, pushSettings } from "../hubs.js";
@@ -24,6 +26,7 @@ export const buildAvailable = (target: string) => existsSync(join(downloadsDir, 
 
 function accountView(user: User) {
 	const keys = keysForUser(user.id);
+	const spotify = spotifyForUser(user.id);
 	return {
 		user: {
 			login: user.login,
@@ -32,6 +35,8 @@ function accountView(user: User) {
 			isAdmin: isAdmin(user),
 		},
 		provider: user.provider,
+		availableProviders: availableProviderIds,
+		spotify: spotify ? { displayName: spotify.displayName } : null,
 		setupDone: !!user.setup_done,
 		key: keys ? { prefix: keys.write_key_prefix, masked: maskKey(keys.write_key_prefix) } : null,
 		overlayUrl: keys ? overlayUrlFor(keys.read_key) : null,
@@ -60,6 +65,7 @@ export function registerAccount(app: FastifyInstance) {
 			}
 			const user = currentUser(req)!;
 			setProvider(user.id, body.data.provider);
+			if (transportFor(body.data.provider) === "account") ensureKeys(user.id);
 			return accountView(currentUser(req)!);
 		});
 

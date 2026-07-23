@@ -15,7 +15,7 @@ const SESSION = "sid";
 const STATE = "oauth_state";
 const redirectUri = `${publicUrl}/auth/callback`;
 
-const cookieBase = { path: "/", httpOnly: true, secure: cookieSecure, sameSite: "lax", signed: true } as const;
+export const cookieBase = { path: "/", httpOnly: true, secure: cookieSecure, sameSite: "lax", signed: true } as const;
 
 export function authorizeUrl(reply: FastifyReply): string {
 	const state = randomBytes(16).toString("base64url");
@@ -30,7 +30,7 @@ export function authorizeUrl(reply: FastifyReply): string {
 	return `https://id.twitch.tv/oauth2/authorize?${params}`;
 }
 
-function readSigned(req: FastifyRequest, name: string): string | null {
+export function readSigned(req: FastifyRequest, name: string): string | null {
 	const raw = req.cookies[name];
 	if (!raw) return null;
 	const result = req.unsignCookie(raw);

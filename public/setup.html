@@ -36,7 +36,8 @@
 			<div class="panel-gutter"><b>2</b><span class="rail"></span></div>
 			<div class="panel-body">
 				<div class="panel-head">
-					<h2>Install the extension and take your key</h2>
+					<h2 id="step2Title">Install the extension and take your key</h2>
+					<span class="note" id="step2Note"></span>
 				</div>
 				<div id="step2"></div>
 			</div>
@@ -84,15 +85,18 @@
 		const providersEl = document.getElementById("providers");
 		const providerState = document.getElementById("providerState");
 
+		const isAvailable = (id) => (account.availableProviders ?? []).includes(id);
+
 		function renderProviders() {
 			providersEl.innerHTML = "";
 			for (const p of PROVIDERS) {
+				const ready = isAvailable(p.id);
 				const btn = el("button", "choice");
 				btn.type = "button";
-				btn.disabled = !p.available;
+				btn.disabled = !ready;
 				btn.setAttribute("aria-pressed", String(provider === p.id));
 				btn.innerHTML = `
-					<span class="tag">${p.available ? "Ready" : "Soon"}</span>
+					<span class="tag">${ready ? "Ready" : "Soon"}</span>
 					<h3>${p.name}</h3>
 					<p>${p.tagline}</p>
 					<p style="margin-top:8px">${p.how}</p>`;
@@ -105,6 +109,7 @@
 		async function choose(id) {
 			try {
 				const next = await api("/api/me/provider", { method: "POST", body: { provider: id } });
+				Object.assign(account, next);
 				provider = next.provider;
 				renderProviders();
 				unlock();
@@ -114,12 +119,77 @@
 			}
 		}
 
-		// ---- step 2: extension + key ----------------------------------------
+		// ---- step 2: connect the source --------------------------------------
 		const step2 = document.getElementById("step2");
+		const step2Title = document.getElementById("step2Title");
+		const step2Note = document.getElementById("step2Note");
 		let browser = BROWSERS[0].id;
 
 		function renderStep2() {
 			step2.innerHTML = "";
+			if (providerById(provider)?.transport === "account") renderLinkStep();
+			else renderExtensionStep();
+
+			step2.append(el("hr", "rule"));
+			const obs = el("div");
+			obs.append(copyField(account.overlayUrl, { label: "Overlay URL for OBS" }));
+			const list = el("ol", "steps");
+			for (const s of [
+				"In OBS: Sources → + → Browser.",
+				"Paste the URL above.",
+				"Set the width and height to suit your scene — 400 x 400 is a good start.",
+				"Leave “Shutdown source when not visible” off, so it reconnects on its own.",
+			]) list.append(el("li", null, s));
+			list.style.marginTop = "12px";
+			obs.append(list);
+			obs.append(el("p", "note", "This URL is not secret enough to show on stream — anyone with it can watch what you play. Rotate it from your dashboard if it leaks."));
+			step2.append(obs);
+		}
+
+		function renderLinkStep() {
+			step2Title.textContent = "Connect your Spotify account";
+			step2Note.textContent = "Nothing to install.";
+
+			const row = el("div", "row");
+			const link = el("a", "btn primary", account.spotify ? "Reconnect Spotify" : "Connect Spotify");
+			link.href = "/auth/spotify";
+			row.append(link);
+			if (account.spotify) {
+				const off = el("button", "btn quiet", "Disconnect");
+				off.type = "button";
+				off.addEventListener("click", disconnectSpotify);
+				row.append(off);
+			}
+			step2.append(row);
+
+			step2.append(el("p", "note", account.spotify
+				? `Connected as ${account.spotify.displayName || "your Spotify account"}. Cue reads your playback only while a browser source is open in OBS.`
+				: "Cue asks for read-only access to what you are playing. It cannot start, stop or change anything, and it only looks while OBS has your overlay open."));
+
+			const steps = el("ol", "steps");
+			for (const s of [
+				"Sign in to Spotify and approve the read-only access.",
+				"Play something on any device — desktop, phone or the web player.",
+				"Paste the overlay URL below into OBS.",
+			]) steps.append(el("li", null, s));
+			steps.style.marginTop = "14px";
+			step2.append(steps);
+		}
+
+		async function disconnectSpotify() {
+			try {
+				await api("/api/me/spotify/disconnect", { method: "POST" });
+				account.spotify = null;
+				renderStep2();
+				toast("Spotify disconnected");
+			} catch (err) {
+				toast(err.message, true);
+			}
+		}
+
+		function renderExtensionStep() {
+			step2Title.textContent = "Install the extension and take your key";
+			step2Note.textContent = "";
 
 			const pick = el("div", "choices");
 			for (const b of BROWSERS) {
@@ -158,21 +228,6 @@
 			keyBox.id = "keyBox";
 			step2.append(keyBox);
 			renderKey();
-
-			step2.append(el("hr", "rule"));
-			const obs = el("div");
-			obs.append(copyField(account.overlayUrl, { label: "Overlay URL for OBS" }));
-			const list = el("ol", "steps");
-			for (const s of [
-				"In OBS: Sources → + → Browser.",
-				"Paste the URL above.",
-				"Set the width and height to suit your scene — 400 × 120 is a good start.",
-				"Leave “Shutdown source when not visible” off, so it reconnects on its own.",
-			]) list.append(el("li", null, s));
-			list.style.marginTop = "12px";
-			obs.append(list);
-			obs.append(el("p", "note", "This URL is not secret enough to show on stream — anyone with it can watch what you play. Rotate it from your dashboard if it leaks."));
-			step2.append(obs);
 		}
 
 		// Held in memory only, so switching browser tabs in step 2 does not wipe a
@@ -218,6 +273,9 @@
 		setLamp(true);
 
 		document.getElementById("finish").addEventListener("click", async (ev) => {
+			if (providerById(provider)?.transport === "account" && !account.spotify) {
+				return toast("Connect your Spotify account in step 2 first", true);
+			}
 			ev.target.disabled = true;
 			try {
 				await studio.flush();
@@ -237,6 +295,14 @@
 			}
 			document.getElementById("panel1").classList.toggle("done", open);
 			if (open) renderStep2();
+		}
+
+		const linkResult = new URLSearchParams(location.search).get("spotify");
+		if (linkResult) {
+			history.replaceState(null, "", location.pathname);
+			if (linkResult === "linked") toast("Spotify connected");
+			else if (linkResult === "unconfigured") toast("Spotify is not configured on this server", true);
+			else toast("Spotify did not connect — try again", true);
 		}
 
 		renderProviders();

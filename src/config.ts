@@ -20,10 +20,22 @@ export const downloadsDir = resolve(process.env.DOWNLOADS_DIR ?? join(rootDir, "
 export const port = Number(process.env.PORT ?? 8080);
 export const host = process.env.HOST ?? "0.0.0.0";
 export const publicUrl = (process.env.PUBLIC_URL ?? `http://localhost:${port}`).replace(/\/$/, "");
+export const publicHost = new URL(publicUrl).host;
 
 export const twitchClientId = process.env.TWITCH_CLIENT_ID ?? "";
 export const twitchClientSecret = process.env.TWITCH_CLIENT_SECRET ?? "";
 export const authEnabled = !!(twitchClientId && twitchClientSecret);
+
+export const spotifyClientId = process.env.SPOTIFY_CLIENT_ID ?? "";
+export const spotifyClientSecret = process.env.SPOTIFY_CLIENT_SECRET ?? "";
+export const spotifyEnabled = !!(spotifyClientId && spotifyClientSecret);
+
+export const spotifyRedirectUri = (
+	process.env.SPOTIFY_REDIRECT_URI ?? `${publicUrl}/auth/spotify/callback`
+).replace(/\/$/, "");
+
+export const spotifyPollMs = Number(process.env.SPOTIFY_POLL_MS ?? 5000);
+export const spotifyIdlePollMs = Number(process.env.SPOTIFY_IDLE_POLL_MS ?? 15000);
 
 /**
  * Twitch user ids, as strings. They are numeric but treated as opaque text
@@ -42,4 +54,7 @@ if (!process.env.COOKIE_SECRET) {
 }
 if (!authEnabled) {
 	console.warn("TWITCH_CLIENT_ID/TWITCH_CLIENT_SECRET unset — sign-in is disabled.");
+}
+if (!spotifyEnabled) {
+	console.warn("SPOTIFY_CLIENT_ID/SPOTIFY_CLIENT_SECRET unset — Spotify is offered as unavailable.");
 }

@@ -42,10 +42,10 @@
 		</section>
 
 		<section class="panel">
-			<div class="panel-gutter"><span>key</span><span class="rail"></span></div>
+			<div class="panel-gutter"><span id="sourceGutter">key</span><span class="rail"></span></div>
 			<div class="panel-body">
 				<div class="panel-head">
-					<h2>Extension key</h2>
+					<h2 id="sourceTitle">Extension key</h2>
 					<span class="note" id="sourceName"></span>
 				</div>
 				<div id="keyBox"></div>
@@ -122,8 +122,46 @@
 			}
 		});
 
-		// ---- key -------------------------------------------------------------
+		// ---- how the music reaches us ----------------------------------------
 		const keyBox = document.getElementById("keyBox");
+		const usesExtension = providerById(account.provider)?.transport !== "account";
+
+		function renderSource() {
+			if (usesExtension) return renderKey();
+
+			document.getElementById("sourceGutter").textContent = "link";
+			document.getElementById("sourceTitle").textContent = "Spotify";
+			keyBox.innerHTML = "";
+			keyBox.append(el("p", "lede", account.spotify
+				? `Connected as ${account.spotify.displayName || "your Spotify account"}.`
+				: "Not connected — your overlay has nothing to read."));
+			keyBox.append(el("p", "note", "Cue asks Spotify what is playing only while a browser source is connected, and it can never change your playback."));
+
+			const row = el("div", "row");
+			row.style.marginTop = "10px";
+			const link = el("a", account.spotify ? "btn quiet" : "btn primary", account.spotify ? "Reconnect" : "Connect Spotify");
+			link.href = "/auth/spotify";
+			row.append(link);
+			if (account.spotify) {
+				const off = el("button", "btn danger", "Disconnect");
+				off.type = "button";
+				off.addEventListener("click", disconnect);
+				row.append(off);
+			}
+			keyBox.append(row);
+		}
+
+		async function disconnect() {
+			if (!confirm("Disconnect Spotify?\n\nYour overlay goes blank until you connect it again.")) return;
+			try {
+				await api("/api/me/spotify/disconnect", { method: "POST" });
+				account.spotify = null;
+				renderSource();
+				toast("Spotify disconnected");
+			} catch (err) {
+				toast(err.message, true);
+			}
+		}
 
 		function renderKey() {
 			keyBox.innerHTML = "";
@@ -154,7 +192,13 @@
 				toast(err.message, true);
 			}
 		}
-		renderKey();
+		renderSource();
+
+		const linkResult = new URLSearchParams(location.search).get("spotify");
+		if (linkResult) {
+			history.replaceState(null, "", location.pathname);
+			toast(linkResult === "linked" ? "Spotify connected" : "Spotify did not connect — try again", linkResult !== "linked");
+		}
 
 		// ---- style -----------------------------------------------------------
 		mountStyleStudio(document.getElementById("studio"), { settings: account.settings });
