@@ -131,7 +131,7 @@ h3 { font-size: 15px; font-weight: 600; }
 	border-radius: var(--radius);
 	margin-top: 16px;
 	overflow: hidden;
-	min-height: 220px;
+	min-height: 120px;
 }
 
 /* The gutter carries the step number. Setup really is a sequence, so the
