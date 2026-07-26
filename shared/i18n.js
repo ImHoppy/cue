@@ -83,7 +83,6 @@ const STRINGS = {
 		"studio.saveFailed": "Could not save your style: {message}",
 
 		"landing.description": "Put the music you're listening to on your stream as an OBS browser source. Sign in with Twitch, add one URL, done.",
-		"landing.eyebrow": "OBS browser source",
 		"landing.h1": "The track you're <span class=\"lit-word\">playing</span>, on your stream.",
 		"landing.note": "Free. Cue reads your Twitch name and nothing else — no channel access, no chat, no email.",
 		"landing.stepsTitle": "Three steps, once.",
@@ -356,7 +355,6 @@ const STRINGS = {
 		"studio.saveFailed": "Impossible d'enregistrer votre style : {message}",
 
 		"landing.description": "Affichez la musique que vous écoutez sur votre stream, via une source navigateur OBS. Connectez-vous avec Twitch, ajoutez une URL, c'est tout.",
-		"landing.eyebrow": "Source navigateur OBS",
 		"landing.h1": "Le titre que vous <span class=\"lit-word\">écoutez</span>, sur votre stream.",
 		"landing.note": "Gratuit. Cue lit votre nom Twitch et rien d'autre — aucun accès à votre chaîne, à votre chat ni à votre e-mail.",
 		"landing.stepsTitle": "Trois étapes, une seule fois.",

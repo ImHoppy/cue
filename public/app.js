@@ -28,12 +28,15 @@ export function errorMessage(code) {
 
 export async function api(path, { method = "GET", body } = {}) {
 	let res;
+	const early = method === "GET" ? window.__prefetch?.get(path) : undefined;
+	if (early) window.__prefetch.delete(path);
 	try {
-		res = await fetch(path, {
-			method,
-			headers: body ? { "content-type": "application/json" } : undefined,
-			body: body ? JSON.stringify(body) : undefined,
-		});
+		res = await (early ??
+			fetch(path, {
+				method,
+				headers: body ? { "content-type": "application/json" } : undefined,
+				body: body ? JSON.stringify(body) : undefined,
+			}));
 	} catch {
 		throw new Error(t("errors.network"));
 	}

@@ -38,10 +38,28 @@ export function pickLang(req: FastifyRequest): Lang {
 export const say = (lang: Lang, key: string, vars?: Record<string, unknown>) =>
 	translate(lang, key, vars);
 
+const MODULE_GRAPH = [
+	"/assets/app.js",
+	"/shared/overlay-core.js",
+	"/shared/fake-player.js",
+	"/shared/style-editor.js",
+	"/shared/i18n.js",
+	"/shared/contract.js",
+];
+
+const headHints =
+	MODULE_GRAPH.map((src) => `<link rel="modulepreload" href="${src}">`).join("") +
+	"<script>window.__prefetch=new Map();" +
+	"function prefetch(p){const r=fetch(p);r.catch(()=>{});window.__prefetch.set(p,r);}</script>";
+
 export function sendPage(reply: FastifyReply, body: string, lang: Lang) {
 	return reply
 		.type("text/html; charset=utf-8")
 		.header("cache-control", "private, no-cache")
 		.header("vary", "accept-language, cookie")
-		.send(body.replace('<html lang="en">', `<html lang="${lang}" data-lang="${lang}">`));
+		.send(
+			body
+				.replace('<html lang="en">', `<html lang="${lang}" data-lang="${lang}">`)
+				.replace('<meta charset="utf-8">', `<meta charset="utf-8">${headHints}`)
+		);
 }
