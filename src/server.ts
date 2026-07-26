@@ -2,7 +2,7 @@ import cookie from "@fastify/cookie";
 import formbody from "@fastify/formbody";
 import rateLimit from "@fastify/rate-limit";
 import fastifyStatic from "@fastify/static";
-import Fastify, { type FastifyReply } from "fastify";
+import Fastify, { type FastifyReply, type FastifyRequest } from "fastify";
 import {
 	cookieSecret,
 	host,
@@ -16,6 +16,7 @@ import {
 } from "./config.js";
 import { readKeyIsLive } from "./db.js";
 import { hubStats, startHubTimers } from "./hubs.js";
+import { pickLang, say } from "./lang.js";
 import { registerAccount } from "./routes/account.js";
 import { registerAdmin } from "./routes/admin.js";
 import { registerPages } from "./routes/pages.js";
@@ -57,23 +58,28 @@ await app.register(fastifyStatic, {
 
 app.get("/healthz", async () => ({ ok: true, ...hubStats() }));
 
-const unknownKey = (reply: FastifyReply) =>
-	reply
+const unknownKey = (req: FastifyRequest, reply: FastifyReply) => {
+	const lang = pickLang(req);
+	return reply
 		.code(404)
 		.type("text/html; charset=utf-8")
-		.send("<h1>Overlay not found</h1><p>This overlay URL is not in use. Copy a fresh one from your dashboard.</p>");
+		.send(
+			`<h1>${say(lang, "server.overlayNotFound.title")}</h1>` +
+				`<p>${say(lang, "server.overlayNotFound.body")}</p>`
+		);
+};
 
 // index.html loads /shared/* by absolute path, so it can be served from either
 // spelling of the overlay URL without breaking its own asset paths.
 app.get<{ Querystring: { key?: string } }>("/overlay", async (req, reply) => {
 	const key = req.query.key;
-	if (!key || !readKeyIsLive(key)) return unknownKey(reply);
+	if (!key || !readKeyIsLive(key)) return unknownKey(req, reply);
 	return reply.sendFile("index.html", overlayDir);
 });
 
 app.get<{ Querystring: { key?: string } }>("/overlay/", async (req, reply) => {
 	const key = req.query.key;
-	if (!key || !readKeyIsLive(key)) return unknownKey(reply);
+	if (!key || !readKeyIsLive(key)) return unknownKey(req, reply);
 	return reply.sendFile("index.html", overlayDir);
 });
 

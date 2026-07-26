@@ -13,6 +13,8 @@
  *   direct-labels its bars or ships a table view toggle.
  */
 
+import { dateFormat, numberFormat, t } from "/shared/i18n.js";
+
 const el = (tag, className, text) => {
 	const node = document.createElement(tag);
 	if (className) node.className = className;
@@ -21,8 +23,9 @@ const el = (tag, className, text) => {
 };
 
 export const formatCount = (n) =>
-	n >= 10000 ? new Intl.NumberFormat(undefined, { notation: "compact", maximumFractionDigits: 1 }).format(n)
-		: new Intl.NumberFormat().format(n);
+	n >= 10000
+		? numberFormat({ notation: "compact", maximumFractionDigits: 1 }).format(n)
+		: numberFormat().format(n);
 
 export function formatDuration(ms) {
 	const mins = Math.floor(ms / 60000);
@@ -33,7 +36,7 @@ export function formatDuration(ms) {
 }
 
 const dayLabel = (iso) =>
-	new Date(`${iso}T00:00:00Z`).toLocaleDateString(undefined, { day: "numeric", month: "short", timeZone: "UTC" });
+	dateFormat({ day: "numeric", month: "short", timeZone: "UTC" }).format(new Date(`${iso}T00:00:00Z`));
 
 // ---- one shared tooltip ----------------------------------------------------
 
@@ -81,10 +84,10 @@ export function statTile({ label, value, delta }) {
 		const diff = delta.current - delta.previous;
 		const line = el("span", "tile-delta");
 		if (delta.previous === 0 && diff === 0) {
-			line.textContent = `None ${delta.period}`;
+			line.textContent = t("admin.delta.none", { period: delta.period });
 		} else {
 			const direction = el("span", diff > 0 ? "up" : diff < 0 ? "down" : "", `${diff > 0 ? "+" : ""}${diff}`);
-			line.append(direction, document.createTextNode(` vs ${delta.period}`));
+			line.append(direction, document.createTextNode(t("admin.delta.vs", { period: delta.period })));
 		}
 		tile.append(line);
 	}
@@ -117,9 +120,9 @@ function niceMax(value) {
  *
  * @param {HTMLElement} host
  * @param {Array<{day: string, count: number}>} data
- * @param {string} noun  what one unit is, for the tooltip ("account")
+ * @param {string} nounKey  i18n key for what one unit is, pluralized in the tooltip
  */
-export function columnChart(host, data, noun) {
+export function columnChart(host, data, nounKey) {
 	host.innerHTML = "";
 	const counts = data.map((d) => d.count);
 	const top = niceMax(Math.max(...counts, 0));
@@ -155,7 +158,7 @@ export function columnChart(host, data, noun) {
 
 		// Only days with a value are worth a tab stop.
 		if (point.count > 0) slot.tabIndex = 0;
-		bindTip(slot, `<b>${point.count}</b> ${noun}${point.count === 1 ? "" : "s"}<br>${dayLabel(point.day)}`);
+		bindTip(slot, `<b>${point.count}</b> ${t(nounKey, { count: point.count })}<br>${dayLabel(point.day)}`);
 		plot.append(slot);
 	}
 
@@ -171,12 +174,12 @@ export function columnChart(host, data, noun) {
 }
 
 /** The WCAG-clean twin of the column chart — every value, plainly. */
-export function columnTable(host, data, noun) {
+export function columnTable(host, data, nounKey) {
 	host.innerHTML = "";
 	const wrap = el("div", "tablewrap");
 	const table = el("table");
 	const head = el("tr");
-	head.append(el("th", null, "Day"), el("th", null, noun[0].toUpperCase() + noun.slice(1) + "s"));
+	head.append(el("th", null, t("admin.table.day")), el("th", null, t(`${nounKey}.title`)));
 	table.append(head);
 	for (const point of data) {
 		const row = el("tr");

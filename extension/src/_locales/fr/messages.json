@@ -1,0 +1,11 @@
+{
+	"extensionName": {
+		"message": "Cue — la musique sur votre stream"
+	},
+	"extensionDescription": {
+		"message": "Envoie le titre YouTube Music que vous écoutez vers votre overlay Cue dans OBS."
+	},
+	"actionTitle": {
+		"message": "Cue"
+	}
+}

@@ -73,6 +73,29 @@ a:hover { color: #ffc978; }
 .who { display: flex; align-items: center; gap: 10px; font-size: 13px; color: var(--mute); }
 .who img { width: 26px; height: 26px; border-radius: 50%; display: block; }
 
+.langswitch {
+	display: inline-flex;
+	border: 1px solid var(--rule);
+	border-radius: 8px;
+	overflow: hidden;
+}
+
+.langswitch .lang {
+	padding: 5px 9px;
+	border: 0;
+	background: none;
+	color: var(--mute);
+	font: inherit;
+	font-family: var(--mono);
+	font-size: 11px;
+	letter-spacing: 0.06em;
+	cursor: pointer;
+}
+
+.langswitch .lang + .lang { border-left: 1px solid var(--rule); }
+.langswitch .lang:hover { color: var(--paper); }
+.langswitch .lang[aria-pressed="true"] { background: var(--signal); color: var(--ink); }
+
 /* ---- type --------------------------------------------------------------- */
 
 h1, h2, h3 { font-family: var(--display); letter-spacing: -0.025em; margin: 0; }
@@ -108,6 +131,7 @@ h3 { font-size: 15px; font-weight: 600; }
 	border-radius: var(--radius);
 	margin-top: 16px;
 	overflow: hidden;
+	min-height: 220px;
 }
 
 /* The gutter carries the step number. Setup really is a sequence, so the

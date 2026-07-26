@@ -10,9 +10,14 @@ import { createOverlay } from "./shared/overlay-core.js";
 import { createFakePlayer } from "./shared/fake-player.js";
 import { createStyleEditor } from "./shared/style-editor.js";
 import { DEFAULT_SETTINGS } from "./shared/contract.js";
+import { applyTranslations, initLang, t } from "./shared/i18n.js";
 import { DEFAULT_SERVER } from "./config.generated.js";
 
 const browserAPI = typeof browser !== "undefined" ? browser : chrome;
+
+// No server and no cookie out here, so the browser's own language decides.
+initLang();
+applyTranslations();
 
 const $ = (id) => document.getElementById(id);
 const dot = $("dot");
@@ -30,6 +35,8 @@ function say(text, bad = false) {
 	msg.textContent = text;
 	msg.classList.toggle("bad", bad);
 }
+
+const errorText = (error) => (error ? t(`popup.error.${error.code}`, { status: error.status }) : "");
 
 // ---- preview ---------------------------------------------------------------
 
@@ -51,18 +58,18 @@ const editor = createStyleEditor($("editor"), {
 function paintStatus(res) {
 	if (!res) {
 		dot.className = "dot off";
-		state.textContent = "extension not running";
+		state.textContent = t("popup.notRunning");
 		return;
 	}
 	const connected = res.connected === true;
 	dot.className = "dot " + (res.connected === null ? "" : connected ? "on" : "off");
 	state.textContent = connected
 		? res.lastSnapshot?.hasTrack
-			? `sending · ${res.lastSnapshot.title}`
-			: "connected · nothing playing"
+			? t("popup.sending", { title: res.lastSnapshot.title })
+			: t("popup.connectedIdle")
 		: res.hasKey
-			? res.lastError || "not connected"
-			: "no key yet";
+			? errorText(res.lastError) || t("popup.notConnected")
+			: t("popup.noKeyYet");
 
 	overlayUrl = res.overlayUrl || "";
 	$("overlaySection").hidden = !overlayUrl;
@@ -74,7 +81,7 @@ function paintStatus(res) {
 	if (res.lastSnapshot?.hasTrack) {
 		player.stop();
 		overlay.applySnapshot(res.lastSnapshot);
-		$("previewNote").textContent = "Showing what your overlay is showing.";
+		$("previewNote").textContent = t("popup.showingLive");
 	}
 }
 
@@ -86,9 +93,9 @@ function refresh() {
 
 $("save").addEventListener("click", () => {
 	const key = keyInput.value.trim();
-	if (!key) return say("Paste the key from your dashboard first.", true);
+	if (!key) return say(t("popup.pasteFirst"), true);
 	browserAPI.runtime.sendMessage({ type: "SET_KEY", payload: { writeKey: key } });
-	say("Connecting…");
+	say(t("popup.connecting"));
 	keyInput.value = "";
 	setTimeout(() => {
 		refresh();
@@ -99,10 +106,10 @@ $("save").addEventListener("click", () => {
 $("copyUrl").addEventListener("click", async () => {
 	try {
 		await navigator.clipboard.writeText(overlayUrl);
-		$("copyUrl").textContent = "Copied — paste it into a Browser Source";
-		setTimeout(() => ($("copyUrl").textContent = "Copy overlay URL for OBS"), 1800);
+		$("copyUrl").textContent = t("popup.copiedUrl");
+		setTimeout(() => ($("copyUrl").textContent = t("popup.copyUrl")), 1800);
 	} catch {
-		say("Your browser blocked the clipboard. Copy the URL from your dashboard.", true);
+		say(t("popup.clipboardBlocked"), true);
 	}
 });
 

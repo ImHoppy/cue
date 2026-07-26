@@ -3,7 +3,7 @@
 <head>
 	<meta charset="utf-8">
 	<meta name="viewport" content="width=device-width, initial-scale=1">
-	<title>Cue - your overlay</title>
+	<title>Cue · Overlay</title>
 	<link rel="preconnect" href="https://fonts.googleapis.com">
 	<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 	<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wdth,wght@12..96,75..100,200..800&family=Inter+Tight:wght@400;500;600&family=JetBrains+Mono:wght@400;500&family=Plus+Jakarta+Sans:ital,wght@0,400..800;1,400..800&display=swap">
@@ -20,47 +20,48 @@
 	<main class="shell">
 		<div class="panel-head" style="margin-bottom:6px">
 			<div>
-				<p class="eyebrow">Your overlay</p>
-				<h1 style="font-size:clamp(30px,5vw,46px)" id="greeting">Ready when you are.</h1>
+				<p class="eyebrow" data-i18n="dash.eyebrow">Your overlay</p>
+				<h1 style="font-size:clamp(30px,5vw,46px)" id="greeting" data-i18n="dash.greeting">Ready when you are.</h1>
 			</div>
 		</div>
-		<p class="lede" id="liveState">Checking whether OBS is connected…</p>
+		<p class="lede" id="liveState" data-i18n="dash.checking">Checking whether OBS is connected…</p>
 
 		<section class="panel">
-			<div class="panel-gutter"><span>obs</span><span class="rail"></span></div>
+			<div class="panel-gutter"><span data-i18n="dash.gutter.obs">obs</span><span class="rail"></span></div>
 			<div class="panel-body">
 				<div class="panel-head">
-					<h2>Overlay URL</h2>
-					<span class="note">Browser source in OBS</span>
+					<h2 data-i18n="dash.overlayUrl">Overlay URL</h2>
+					<span class="note" data-i18n="dash.obsNote">Browser source in OBS</span>
 				</div>
 				<div id="overlayUrl"></div>
 				<div class="row">
-					<button class="btn danger" id="rotate" type="button">Get a new URL</button>
-					<span class="note">Use this if the old URL showed up on stream. Your extension keeps working; you only re-paste the URL in OBS.</span>
+					<button class="btn danger" id="rotate" type="button" data-i18n="dash.rotate">Get a new URL</button>
+					<span class="note" data-i18n="dash.rotateNote">Use this if the old URL showed up on stream. Your extension keeps working; you only re-paste the URL in OBS.</span>
 				</div>
 			</div>
 		</section>
 
 		<section class="panel">
-			<div class="panel-gutter"><span id="sourceGutter">key</span><span class="rail"></span></div>
+			<div class="panel-gutter"><span id="sourceGutter" data-i18n="dash.gutter.key">key</span><span class="rail"></span></div>
 			<div class="panel-body">
 				<div class="panel-head">
-					<h2 id="sourceTitle">Extension key</h2>
+					<h2 id="sourceTitle" data-i18n="dash.sourceTitle">Extension key</h2>
 					<span class="note" id="sourceName"></span>
 				</div>
 				<div id="keyBox"></div>
 				<p class="note" style="margin-top:16px">
-					Changed music service? <a href="/setup">Run setup again</a>.
+					<span data-i18n="dash.changedService">Changed music service?</span>
+					<a href="/setup" data-i18n="dash.runSetup">Run setup again</a>.
 				</p>
 			</div>
 		</section>
 
 		<section class="panel">
-			<div class="panel-gutter"><span>style</span></div>
+			<div class="panel-gutter"><span data-i18n="dash.gutter.style">style</span></div>
 			<div class="panel-body">
 				<div class="panel-head">
-					<h2>Style</h2>
-					<span class="note">Playing a test track. Changes reach OBS live.</span>
+					<h2 data-i18n="dash.style">Style</h2>
+					<span class="note" data-i18n="dash.styleNote">Playing a test track. Changes reach OBS live.</span>
 				</div>
 				<div id="studio"></div>
 			</div>
@@ -68,7 +69,7 @@
 	</main>
 
 	<script type="module">
-		import { api, toast, copyField, el, mountStyleStudio, setLamp, providerById } from "/assets/app.js";
+		import { api, toast, copyField, el, mountStyleStudio, setLamp, mountLangSwitch, t, providerById } from "/assets/app.js";
 
 		const account = await api("/api/me");
 
@@ -79,11 +80,12 @@
 		}
 		who.append(el("span", null, account.user.displayName));
 		if (account.user.isAdmin) {
-			const admin = el("a", "btn quiet", "Admin");
+			const admin = el("a", "btn quiet", t("dash.admin"));
 			admin.href = "/admin";
 			who.append(admin);
 		}
-		const out = el("button", "btn quiet", "Sign out");
+		mountLangSwitch(who);
+		const out = el("button", "btn quiet", t("common.signOut"));
 		out.addEventListener("click", () => {
 			const f = document.createElement("form");
 			f.method = "POST";
@@ -93,27 +95,27 @@
 		});
 		who.append(out);
 
-		document.getElementById("greeting").textContent = `Ready when you are, ${account.user.displayName}.`;
+		document.getElementById("greeting").textContent = t("dash.greetingNamed", { name: account.user.displayName });
 		document.getElementById("sourceName").textContent = account.provider
-			? `Reading from ${providerById(account.provider)?.name}`
-			: "No music source picked yet";
+			? t("dash.readingFrom", { name: t(providerById(account.provider)?.nameKey) })
+			: t("dash.noProvider");
 
 		// ---- overlay url -----------------------------------------------------
 		const urlBox = document.getElementById("overlayUrl");
 		function renderUrl() {
 			urlBox.innerHTML = "";
-			urlBox.append(copyField(account.overlayUrl, { label: "Paste into a Browser Source" }));
+			urlBox.append(copyField(account.overlayUrl, { label: t("dash.pasteLabel") }));
 		}
 		renderUrl();
 
 		document.getElementById("rotate").addEventListener("click", async (ev) => {
-			if (!confirm("Get a new overlay URL?\n\nThe URL currently in OBS will stop working and you will have to paste the new one.")) return;
+			if (!confirm(t("dash.rotateConfirm"))) return;
 			ev.target.disabled = true;
 			try {
 				const res = await api("/api/me/overlay-url/rotate", { method: "POST" });
 				Object.assign(account, res.account);
 				renderUrl();
-				toast("New overlay URL — paste it into OBS");
+				toast(t("dash.rotated"));
 			} catch (err) {
 				toast(err.message, true);
 			} finally {
@@ -128,21 +130,24 @@
 		function renderSource() {
 			if (usesExtension) return renderKey();
 
-			document.getElementById("sourceGutter").textContent = "link";
-			document.getElementById("sourceTitle").textContent = "Spotify";
+			document.getElementById("sourceGutter").textContent = t("dash.gutter.link");
+			document.getElementById("sourceTitle").textContent = t("provider.spotify.name");
 			keyBox.innerHTML = "";
 			keyBox.append(el("p", "lede", account.spotify
-				? `Connected as ${account.spotify.displayName || "your Spotify account"}.`
-				: "Not connected — your overlay has nothing to read."));
-			keyBox.append(el("p", "note", "Cue asks Spotify what is playing only while a browser source is connected, and it can never change your playback."));
+				? t("dash.spotify.connectedAs", {
+						name: account.spotify.displayName || t("setup.spotify.yourAccount"),
+					})
+				: t("dash.spotify.notConnected")));
+			keyBox.append(el("p", "note", t("dash.spotify.privacy")));
 
 			const row = el("div", "row");
 			row.style.marginTop = "10px";
-			const link = el("a", account.spotify ? "btn quiet" : "btn primary", account.spotify ? "Reconnect" : "Connect Spotify");
+			const link = el("a", account.spotify ? "btn quiet" : "btn primary",
+				t(account.spotify ? "dash.spotify.reconnect" : "setup.spotify.connect"));
 			link.href = "/auth/spotify";
 			row.append(link);
 			if (account.spotify) {
-				const off = el("button", "btn danger", "Disconnect");
+				const off = el("button", "btn danger", t("setup.spotify.disconnect"));
 				off.type = "button";
 				off.addEventListener("click", disconnect);
 				row.append(off);
@@ -151,12 +156,12 @@
 		}
 
 		async function disconnect() {
-			if (!confirm("Disconnect Spotify?\n\nYour overlay goes blank until you connect it again.")) return;
+			if (!confirm(t("dash.spotify.disconnectConfirm"))) return;
 			try {
 				await api("/api/me/spotify/disconnect", { method: "POST" });
 				account.spotify = null;
 				renderSource();
-				toast("Spotify disconnected");
+				toast(t("setup.spotify.disconnected"));
 			} catch (err) {
 				toast(err.message, true);
 			}
@@ -164,26 +169,29 @@
 
 		function renderKey() {
 			keyBox.innerHTML = "";
-			keyBox.append(copyField(null, { label: "In your extension", masked: account.key?.masked ?? "no key yet" }));
+			keyBox.append(copyField(null, {
+				label: t("dash.key.inExtension"),
+				masked: account.key?.masked ?? t("setup.key.none"),
+			}));
 			const row = el("div", "row");
 			row.style.marginTop = "10px";
-			const regen = el("button", "btn danger", "Regenerate key");
+			const regen = el("button", "btn danger", t("dash.key.regenerate"));
 			regen.addEventListener("click", regenerate);
-			row.append(regen, el("span", "note", "Only a fingerprint of your key is stored, so it can never be shown twice. Lost it? Regenerate and paste the new one into the extension."));
+			row.append(regen, el("span", "note", t("dash.key.regenNote")));
 			keyBox.append(row);
 		}
 
 		async function regenerate() {
-			if (!confirm("Regenerate your extension key?\n\nThe key currently in your extension stops working immediately and you will have to paste the new one.")) return;
+			if (!confirm(t("dash.key.regenConfirm"))) return;
 			try {
 				const res = await api("/api/me/key/regenerate", { method: "POST" });
 				Object.assign(account, res.account);
 				keyBox.innerHTML = "";
 				const reveal = el("div", "reveal");
-				reveal.append(el("p", "warn", "Copy this into the extension now. It is not shown again."));
-				reveal.append(copyField(res.writeKey, { label: "Extension key" }));
+				reveal.append(el("p", "warn", t("setup.key.copyNow")));
+				reveal.append(copyField(res.writeKey, { label: t("setup.key.label") }));
 				keyBox.append(reveal);
-				const done = el("button", "btn quiet", "Done, hide it");
+				const done = el("button", "btn quiet", t("dash.key.hide"));
 				done.style.marginTop = "10px";
 				done.addEventListener("click", renderKey);
 				keyBox.append(done);
@@ -196,7 +204,7 @@
 		const linkResult = new URLSearchParams(location.search).get("spotify");
 		if (linkResult) {
 			history.replaceState(null, "", location.pathname);
-			toast(linkResult === "linked" ? "Spotify connected" : "Spotify did not connect — try again", linkResult !== "linked");
+			toast(t(linkResult === "linked" ? "setup.spotify.connected" : "setup.spotify.failed"), linkResult !== "linked");
 		}
 
 		// ---- style -----------------------------------------------------------
@@ -209,8 +217,8 @@
 				const { overlayConnected } = await api("/api/me/status");
 				setLamp(overlayConnected > 0);
 				liveState.textContent = overlayConnected
-					? `${overlayConnected} browser source connected.`
-					: "No browser source connected.";
+					? t("dash.sources", { count: overlayConnected })
+					: t("dash.noSource");
 			} catch {
 				/* a failed poll is not worth interrupting anyone over */
 			}

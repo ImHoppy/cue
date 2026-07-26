@@ -432,19 +432,19 @@ export function collectStats(days = 30) {
 		// Ordered as the wizard presents them, so a drop between two rows is the
 		// step people are giving up on.
 		funnel: [
-			{ label: "Signed in with Twitch", count: totalUsers },
-			{ label: "Picked a music source", count: countOf("SELECT COUNT(*) AS n FROM users WHERE provider IS NOT NULL") },
-			{ label: "Finished setup", count: countOf("SELECT COUNT(*) AS n FROM users WHERE setup_done = 1") },
-			{ label: "Extension sent a track", count: countOf("SELECT COUNT(*) AS n FROM user_keys WHERE last_seen_at IS NOT NULL") },
-			{ label: "Overlay opened in OBS", count: countOf("SELECT COUNT(*) AS n FROM user_keys WHERE overlay_seen_at IS NOT NULL") },
+			{ id: "signed_in", count: totalUsers },
+			{ id: "picked_source", count: countOf("SELECT COUNT(*) AS n FROM users WHERE provider IS NOT NULL") },
+			{ id: "setup_done", count: countOf("SELECT COUNT(*) AS n FROM users WHERE setup_done = 1") },
+			{ id: "extension_track", count: countOf("SELECT COUNT(*) AS n FROM user_keys WHERE last_seen_at IS NOT NULL") },
+			{ id: "overlay_opened", count: countOf("SELECT COUNT(*) AS n FROM user_keys WHERE overlay_seen_at IS NOT NULL") },
 		],
 		signups,
 		style: {
 			modes: [...modes].map(([mode, count]) => ({ mode, count })).sort((a, b) => b.count - a.count),
 			toggles: [
-				{ label: "Blurred album art", count: toggles.blur },
-				{ label: "Progress bar hidden", count: toggles.hideProgress },
-				{ label: "Hidden while paused", count: toggles.hideWhenPaused },
+				{ id: "blur", count: toggles.blur },
+				{ id: "hide_progress", count: toggles.hideProgress },
+				{ id: "hide_when_paused", count: toggles.hideWhenPaused },
 			],
 		},
 	};

@@ -4,6 +4,7 @@ import { join } from "node:path";
 import { authorizeUrl, completeLogin, currentUser, isAdmin, logout } from "../auth.js";
 import { authEnabled, downloadsDir, publicDir } from "../config.js";
 import { BROWSERS } from "../../shared/contract.js";
+import { pickLang, say, sendPage } from "../lang.js";
 import { buildAvailable } from "./account.js";
 
 const page = (name: string) => readFileSync(join(publicDir, name), "utf8");
@@ -15,39 +16,40 @@ const pages = {
 	admin: page("admin.html"),
 };
 
-const html = (reply: import("fastify").FastifyReply, body: string) => reply.type("text/html; charset=utf-8").send(body);
-
 export function registerPages(app: FastifyInstance) {
 	app.get("/", async (req, reply) => {
 		const user = currentUser(req);
-		if (!user) return html(reply, pages.landing);
+		if (!user) return sendPage(reply, pages.landing, pickLang(req));
 		return reply.redirect(user.setup_done ? "/dashboard" : "/setup");
 	});
 
 	app.get("/setup", async (req, reply) => {
 		if (!currentUser(req)) return reply.redirect("/");
-		return html(reply, pages.setup);
+		return sendPage(reply, pages.setup, pickLang(req));
 	});
 
 	app.get("/dashboard", async (req, reply) => {
 		const user = currentUser(req);
 		if (!user) return reply.redirect("/");
 		if (!user.setup_done) return reply.redirect("/setup");
-		return html(reply, pages.dashboard);
+		return sendPage(reply, pages.dashboard, pickLang(req));
 	});
 
 	app.get("/admin", async (req, reply) => {
 		if (!isAdmin(currentUser(req))) return reply.redirect("/");
-		return html(reply, pages.admin);
+		return sendPage(reply, pages.admin, pickLang(req));
 	});
 
 	// --- sign-in ------------------------------------------------------------
 
-	app.get("/login", async (_req, reply) => {
+	app.get("/login", async (req, reply) => {
 		if (!authEnabled) {
-			return html(
+			const lang = pickLang(req);
+			return sendPage(
 				reply,
-				"<h1>Sign-in is not configured</h1><p>Set TWITCH_CLIENT_ID and TWITCH_CLIENT_SECRET on the server.</p>"
+				`<html lang="en"><body><h1>${say(lang, "server.signInUnconfigured.title")}</h1>` +
+					`<p>${say(lang, "server.signInUnconfigured.body")}</p></body></html>`,
+				lang
 			);
 		}
 		return reply.redirect(authorizeUrl(reply));

@@ -105,30 +105,32 @@
 	</style>
 </head>
 <body>
-	<h1><span class="dot" id="dot"></span>Cue<span class="state" id="state">checking…</span></h1>
+	<h1><span class="dot" id="dot"></span>Cue<span class="state" id="state" data-i18n="popup.checking">checking…</span></h1>
 
 	<section id="connect">
-		<h2>Connection</h2>
-		<label class="field">Key
-			<input id="writeKey" type="password" placeholder="paste the key from your dashboard">
+		<h2 data-i18n="popup.connection">Connection</h2>
+		<label class="field"><span data-i18n="popup.key">Key</span>
+			<input id="writeKey" type="password" data-i18n-attr="placeholder:popup.keyPlaceholder" placeholder="paste the key from your dashboard">
 		</label>
-		<button id="save" type="button">Connect</button>
+		<button id="save" type="button" data-i18n="popup.connect">Connect</button>
 		<p class="msg" id="msg"></p>
 		<p class="hint">
-			Sends to <b id="serverName"></b>.
-			No key? <a id="dashLink" href="#" target="_blank" rel="noopener">Open your dashboard</a> and generate one.
+			<span data-i18n="popup.sendsTo">Sends to</span> <b id="serverName"></b>.
+			<span data-i18n="popup.noKeyHint">No key?</span>
+			<a id="dashLink" href="#" target="_blank" rel="noopener" data-i18n="popup.openDashboard">Open your dashboard</a>
+			<span data-i18n="popup.andGenerate">and generate one.</span>
 		</p>
 	</section>
 
 	<section id="overlaySection" hidden>
-		<h2>Overlay URL</h2>
-		<button class="quiet" id="copyUrl" type="button">Copy overlay URL for OBS</button>
+		<h2 data-i18n="popup.overlayUrl">Overlay URL</h2>
+		<button class="quiet" id="copyUrl" type="button" data-i18n="popup.copyUrl">Copy overlay URL for OBS</button>
 	</section>
 
 	<section>
-		<h2>Style</h2>
+		<h2 data-i18n="popup.style">Style</h2>
 		<div class="scene"><div id="preview"></div></div>
-		<p class="hint" id="previewNote">Showing a test track.</p>
+		<p class="hint" id="previewNote" data-i18n="popup.showingTest">Showing a test track.</p>
 		<div id="editor" style="margin-top:12px"></div>
 	</section>
 

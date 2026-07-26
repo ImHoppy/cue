@@ -8,17 +8,17 @@ export const MODES = ["default", "compact", "cover"];
 export const PROVIDERS = [
 	{
 		id: "youtube-music",
-		name: "YouTube Music",
-		tagline: "Reads the tab you already have open.",
-		how: "A browser extension watches music.youtube.com and sends the track to your overlay.",
+		nameKey: "provider.youtube-music.name",
+		taglineKey: "provider.youtube-music.tagline",
+		howKey: "provider.youtube-music.how",
 		transport: "extension",
 		available: true,
 	},
 	{
 		id: "spotify",
-		name: "Spotify",
-		tagline: "Connects to your Spotify account.",
-		how: "Sign in once and the server reads your playback — no extension, works with the desktop app and your phone.",
+		nameKey: "provider.spotify.name",
+		taglineKey: "provider.spotify.tagline",
+		howKey: "provider.spotify.how",
 		transport: "account",
 		available: true,
 	},
@@ -29,58 +29,54 @@ export const providerById = (id) => PROVIDERS.find((p) => p.id === id) || null;
 export const BROWSERS = [
 	{
 		id: "chrome",
-		name: "Chrome, Edge, Brave, Opera",
+		nameKey: "browser.chrome.name",
 		engine: "Chromium",
-		note: "One build covers every Chromium browser.",
-		steps: [
-			"Unzip the download somewhere you will not delete by accident.",
-			"Open chrome://extensions (edge://extensions on Edge, brave://extensions on Brave).",
-			"Turn on Developer mode, top right.",
-			"Click Load unpacked and pick the unzipped folder.",
+		noteKey: "browser.chrome.note",
+		stepKeys: [
+			"browser.chrome.step.1",
+			"browser.chrome.step.2",
+			"browser.chrome.step.3",
+			"browser.chrome.step.4",
 		],
 	},
 	{
 		id: "firefox",
-		name: "Firefox",
+		nameKey: "browser.firefox.name",
 		engine: "Gecko",
-		note: "Loads as a temporary add-on until it is signed, so repeat this after a restart.",
-		steps: [
-			"Open about:debugging#/runtime/this-firefox.",
-			"Click Load Temporary Add-on.",
-			"Pick the manifest.json inside the unzipped folder.",
-		],
+		noteKey: "browser.firefox.note",
+		stepKeys: ["browser.firefox.step.1", "browser.firefox.step.2", "browser.firefox.step.3"],
 	},
 ];
 
 /**
  * Style controls, in display order. `type` picks the widget, `showIf` hides a
- * control until its parent is on. `group` starts a new titled block.
+ * control until its parent is on. `groupKey` starts a new titled block.
  */
 export const SETTING_FIELDS = [
-	{ key: "mode", type: "select", label: "Layout", group: "Shape", default: "default",
+	{ key: "mode", type: "select", labelKey: "field.mode", groupKey: "field.group.shape", default: "default",
 		options: [
-			{ value: "default", label: "Card" },
-			{ value: "compact", label: "Single line" },
-			{ value: "cover", label: "Cover art" },
+			{ value: "default", labelKey: "field.mode.default" },
+			{ value: "compact", labelKey: "field.mode.compact" },
+			{ value: "cover", labelKey: "field.mode.cover" },
 		] },
-	{ key: "coverSize", type: "range", label: "Cover size", default: 200, min: 120, max: 360, step: 4, unit: "px",
+	{ key: "coverSize", type: "range", labelKey: "field.coverSize", default: 200, min: 120, max: 360, step: 4, unit: "px",
 		showIf: (s) => s.mode === "cover" },
-	{ key: "scale", type: "range", label: "Size", default: 100, min: 60, max: 180, step: 1, unit: "%" },
-	{ key: "radius", type: "range", label: "Corner radius", default: 12, min: 0, max: 30, step: 1, unit: "px" },
+	{ key: "scale", type: "range", labelKey: "field.scale", default: 100, min: 60, max: 180, step: 1, unit: "%" },
+	{ key: "radius", type: "range", labelKey: "field.radius", default: 12, min: 0, max: 30, step: 1, unit: "px" },
 
-	{ key: "accent", type: "color", label: "Accent", group: "Color", default: "#ff2d55" },
-	{ key: "textColor", type: "color", label: "Text", default: "#ffffff" },
-	{ key: "bgColor", type: "color", label: "Background", default: "#121216" },
-	{ key: "opacity", type: "range", label: "Background opacity", default: 82, min: 0, max: 100, step: 1, unit: "%" },
+	{ key: "accent", type: "color", labelKey: "field.accent", groupKey: "field.group.color", default: "#ff2d55" },
+	{ key: "textColor", type: "color", labelKey: "field.textColor", default: "#ffffff" },
+	{ key: "bgColor", type: "color", labelKey: "field.bgColor", default: "#121216" },
+	{ key: "opacity", type: "range", labelKey: "field.opacity", default: 82, min: 0, max: 100, step: 1, unit: "%" },
 
-	{ key: "blur", type: "toggle", label: "Blur the album art behind the card", group: "Backdrop", default: false },
-	{ key: "blurAmount", type: "range", label: "Blur amount", default: 26, min: 0, max: 50, step: 1, unit: "px",
+	{ key: "blur", type: "toggle", labelKey: "field.blur", groupKey: "field.group.backdrop", default: false },
+	{ key: "blurAmount", type: "range", labelKey: "field.blurAmount", default: 26, min: 0, max: 50, step: 1, unit: "px",
 		showIf: (s) => s.blur },
-	{ key: "blurDark", type: "range", label: "Darkness", default: 50, min: 0, max: 90, step: 1, unit: "%",
+	{ key: "blurDark", type: "range", labelKey: "field.blurDark", default: 50, min: 0, max: 90, step: 1, unit: "%",
 		showIf: (s) => s.blur },
 
-	{ key: "showProgress", type: "toggle", label: "Show the progress bar", group: "Behavior", default: true },
-	{ key: "hideWhenPaused", type: "toggle", label: "Hide the card while paused", default: false },
+	{ key: "showProgress", type: "toggle", labelKey: "field.showProgress", groupKey: "field.group.behavior", default: true },
+	{ key: "hideWhenPaused", type: "toggle", labelKey: "field.hideWhenPaused", default: false },
 ];
 
 export const DEFAULT_SETTINGS = Object.freeze(

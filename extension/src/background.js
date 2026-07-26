@@ -27,7 +27,7 @@ let lastSnapshot = { hasTrack: false, playing: false };
 
 /** null until the first request settles, so the popup can say "not tried yet". */
 let connected = null;
-let lastError = "";
+let lastError = null;
 /** Public half of the pair, learned from the server so the popup can show the OBS URL. */
 let overlayUrl = "";
 
@@ -42,10 +42,13 @@ async function loadConfig() {
 	}
 }
 
+const httpError = (status) =>
+	status === 401 ? { code: "key_rejected" } : { code: "server_said", status };
+
 async function post(type, payload) {
 	if (!writeKey) {
 		connected = false;
-		lastError = "No key yet";
+		lastError = { code: "no_key" };
 		return;
 	}
 	try {
@@ -55,10 +58,10 @@ async function post(type, payload) {
 			body: JSON.stringify({ type, payload }),
 		});
 		connected = res.ok;
-		lastError = res.ok ? "" : res.status === 401 ? "Key rejected" : `Server said ${res.status}`;
+		lastError = res.ok ? null : httpError(res.status);
 	} catch {
 		connected = false;
-		lastError = "Cannot reach the server";
+		lastError = { code: "unreachable" };
 	}
 }
 
@@ -70,7 +73,7 @@ async function post(type, payload) {
 async function pullAccount() {
 	if (!writeKey) {
 		connected = false;
-		lastError = "No key yet";
+		lastError = { code: "no_key" };
 		return;
 	}
 	try {
@@ -79,7 +82,7 @@ async function pullAccount() {
 		});
 		if (!res.ok) {
 			connected = false;
-			lastError = res.status === 401 ? "Key rejected" : `Server said ${res.status}`;
+			lastError = httpError(res.status);
 			return;
 		}
 		const body = await res.json();
@@ -87,10 +90,10 @@ async function pullAccount() {
 		overlayUrl = body.overlayUrl || "";
 		await browserAPI.storage.local.set({ overlaySettings: settings, overlayUrl });
 		connected = true;
-		lastError = "";
+		lastError = null;
 	} catch {
 		connected = false;
-		lastError = "Cannot reach the server";
+		lastError = { code: "unreachable" };
 	}
 }
 

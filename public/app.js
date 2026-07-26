@@ -9,24 +9,62 @@
 import { createOverlay } from "/shared/overlay-core.js";
 import { createFakePlayer } from "/shared/fake-player.js";
 import { createStyleEditor } from "/shared/style-editor.js";
+import { LANGS, LANG_NAMES, applyTranslations, getLang, initLang, setLang, t } from "/shared/i18n.js";
 
 export { PROVIDERS, BROWSERS, providerById } from "/shared/contract.js";
+export { t, getLang, applyTranslations } from "/shared/i18n.js";
+
+initLang();
+applyTranslations();
 
 // ---- plumbing --------------------------------------------------------------
 
+export function errorMessage(code) {
+	if (!code) return t("errors.unknown", { code: "?" });
+	const key = `errors.${code}`;
+	const text = t(key);
+	return text === key ? t("errors.unknown", { code }) : text;
+}
+
 export async function api(path, { method = "GET", body } = {}) {
-	const res = await fetch(path, {
-		method,
-		headers: body ? { "content-type": "application/json" } : undefined,
-		body: body ? JSON.stringify(body) : undefined,
-	});
+	let res;
+	try {
+		res = await fetch(path, {
+			method,
+			headers: body ? { "content-type": "application/json" } : undefined,
+			body: body ? JSON.stringify(body) : undefined,
+		});
+	} catch {
+		throw new Error(t("errors.network"));
+	}
 	if (res.status === 401) {
 		location.href = "/";
-		throw new Error("signed out");
+		throw new Error(t("errors.not_signed_in"));
 	}
 	const data = res.status === 204 ? null : await res.json().catch(() => null);
-	if (!res.ok) throw new Error(data?.error || `request failed (${res.status})`);
+	if (!res.ok) {
+		const err = new Error(errorMessage(data?.error ?? String(res.status)));
+		err.code = data?.error ?? null;
+		throw err;
+	}
 	return data;
+}
+
+/** The EN | FR switch. Changing language reloads so the server restamps the page. */
+export function mountLangSwitch(container) {
+	const wrap = el("span", "langswitch");
+	wrap.setAttribute("role", "group");
+	wrap.setAttribute("aria-label", t("common.language"));
+	for (const code of LANGS) {
+		const button = el("button", "lang", code.toUpperCase());
+		button.type = "button";
+		button.title = LANG_NAMES[code];
+		button.setAttribute("aria-pressed", String(code === getLang()));
+		button.addEventListener("click", () => setLang(code));
+		wrap.append(button);
+	}
+	container.append(wrap);
+	return wrap;
 }
 
 let toastEl = null;
@@ -64,16 +102,16 @@ export function copyField(value, { label, masked } = {}) {
 	button.type = "button";
 
 	const copyable = value !== null && value !== undefined;
-	button.textContent = copyable ? "Copy" : "—";
+	button.textContent = copyable ? t("common.copy") : "—";
 	button.disabled = !copyable;
 	button.addEventListener("click", async () => {
 		try {
 			await navigator.clipboard.writeText(value);
-			button.textContent = "Copied";
-			toast(`${label || "Value"} copied`);
-			setTimeout(() => (button.textContent = "Copy"), 1600);
+			button.textContent = t("common.copied");
+			toast(t("common.copiedToast", { label: label || t("common.value") }));
+			setTimeout(() => (button.textContent = t("common.copy")), 1600);
 		} catch {
-			toast("Your browser blocked the clipboard — select the text and copy it", true);
+			toast(t("common.clipboardBlocked"), true);
 		}
 	});
 
@@ -95,10 +133,10 @@ export const el = (tag, className, text) => {
 
 // ---- the style studio ------------------------------------------------------
 
-const SCENES = [
-	{ id: "dark", label: "Dark scene" },
-	{ id: "bright", label: "Bright scene" },
-	{ id: "grid", label: "Transparent" },
+export const SCENES = [
+	{ id: "dark", labelKey: "studio.scene.dark" },
+	{ id: "bright", labelKey: "studio.scene.bright" },
+	{ id: "grid", labelKey: "studio.scene.grid" },
 ];
 
 /**
@@ -122,7 +160,7 @@ export function mountStyleStudio(root, opts) {
 
 	const bar = el("div", "scene-bar");
 	const sceneButtons = SCENES.map((s) => {
-		const chip = el("button", "chip", s.label);
+		const chip = el("button", "chip", t(s.labelKey));
 		chip.type = "button";
 		chip.setAttribute("aria-pressed", String(s.id === "dark"));
 		chip.addEventListener("click", () => {
@@ -132,11 +170,11 @@ export function mountStyleStudio(root, opts) {
 		return chip;
 	});
 
-	const playChip = el("button", "chip", "Pause");
+	const playChip = el("button", "chip", t("studio.pause"));
 	playChip.type = "button";
-	const skipChip = el("button", "chip", "Next track");
+	const skipChip = el("button", "chip", t("studio.next"));
 	skipChip.type = "button";
-	const status = el("span", "chip spacer", "test track");
+	const status = el("span", "chip spacer", t("studio.testTrack"));
 
 	bar.append(...sceneButtons, playChip, skipChip, status);
 	left.append(scene, bar);
@@ -149,7 +187,7 @@ export function mountStyleStudio(root, opts) {
 	player.start();
 
 	playChip.addEventListener("click", () => {
-		playChip.textContent = player.toggle() ? "Pause" : "Play";
+		playChip.textContent = player.toggle() ? t("studio.pause") : t("studio.play");
 	});
 	skipChip.addEventListener("click", () => player.next());
 
@@ -160,11 +198,11 @@ export function mountStyleStudio(root, opts) {
 		saveTimer = setTimeout(async () => {
 			try {
 				const res = await api("/api/me/settings", { method: "PUT", body: { settings } });
-				status.textContent = "saved";
+				status.textContent = t("studio.saved");
 				opts.onSaved?.(res.settings);
 			} catch (err) {
-				toast(`Could not save your style: ${err.message}`, true);
-				status.textContent = "not saved";
+				toast(t("studio.saveFailed", { message: err.message }), true);
+				status.textContent = t("studio.notSaved");
 			}
 		}, 400);
 	}
@@ -174,7 +212,7 @@ export function mountStyleStudio(root, opts) {
 		showReset: true,
 		onChange(settings) {
 			overlay.applySettings(settings);
-			status.textContent = "saving…";
+			status.textContent = t("studio.saving");
 			if (opts.autosave !== false) save(settings);
 		},
 	});

@@ -1,8 +1,9 @@
 {
 	"manifest_version": 3,
-	"name": "Cue — music on your stream",
+	"name": "__MSG_extensionName__",
 	"version": "2.0.0",
-	"description": "Sends the YouTube Music track you are playing to your Cue overlay in OBS.",
+	"description": "__MSG_extensionDescription__",
+	"default_locale": "en",
 	"icons": {
 		"48": "icons/icon_48x48.png",
 		"96": "icons/icon_96x96.png",
@@ -15,7 +16,7 @@
 	},
 	"action": {
 		"default_popup": "popup.html",
-		"default_title": "Cue"
+		"default_title": "__MSG_actionTitle__"
 	},
 	"content_scripts": [
 		{

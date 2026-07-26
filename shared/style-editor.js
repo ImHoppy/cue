@@ -2,6 +2,7 @@
  * Builds the style controls from SETTING_FIELDS.
  */
 import { DEFAULT_SETTINGS, SETTING_FIELDS, fieldVisible, formatValue, normalizeSettings } from "./contract.js";
+import { t } from "./i18n.js";
 
 /**
  * @param {HTMLElement} container
@@ -20,10 +21,13 @@ export function createStyleEditor(container, opts = {}) {
 
 	let group = null;
 	for (const field of SETTING_FIELDS) {
-		if (field.group) {
+		if (field.groupKey) {
 			group = document.createElement("section");
 			group.className = "se-group";
-			group.innerHTML = `<h3 class="se-group-title">${field.group}</h3>`;
+			const title = document.createElement("h3");
+			title.className = "se-group-title";
+			title.textContent = t(field.groupKey);
+			group.append(title);
 			container.append(group);
 		}
 		const row = buildRow(field);
@@ -35,7 +39,7 @@ export function createStyleEditor(container, opts = {}) {
 		const reset = document.createElement("button");
 		reset.type = "button";
 		reset.className = "se-reset";
-		reset.textContent = "Reset to defaults";
+		reset.textContent = t("field.reset");
 		reset.addEventListener("click", () => {
 			settings = { ...DEFAULT_SETTINGS };
 			sync();
@@ -53,7 +57,7 @@ export function createStyleEditor(container, opts = {}) {
 		const label = document.createElement("label");
 		label.className = "se-label";
 		label.htmlFor = id;
-		label.textContent = field.label;
+		label.textContent = t(field.labelKey);
 
 		let input;
 		let readout = null;
@@ -63,7 +67,7 @@ export function createStyleEditor(container, opts = {}) {
 			for (const o of field.options) {
 				const opt = document.createElement("option");
 				opt.value = o.value;
-				opt.textContent = o.label;
+				opt.textContent = t(o.labelKey);
 				input.append(opt);
 			}
 		} else if (field.type === "toggle") {

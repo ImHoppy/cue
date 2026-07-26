@@ -3,7 +3,7 @@
 <head>
 	<meta charset="utf-8">
 	<meta name="viewport" content="width=device-width, initial-scale=1">
-	<title>Cue - Set up your overlay</title>
+	<title>Cue · Setup</title>
 	<link rel="preconnect" href="https://fonts.googleapis.com">
 	<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 	<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wdth,wght@12..96,75..100,200..800&family=Inter+Tight:wght@400;500;600&family=JetBrains+Mono:wght@400;500&family=Plus+Jakarta+Sans:ital,wght@0,400..800;1,400..800&display=swap">
@@ -18,14 +18,14 @@
 	</header>
 
 	<main class="shell">
-		<p class="eyebrow">Setup</p>
-		<h1 style="font-size:clamp(30px,5vw,46px)">Let's get you on air.</h1>
+		<p class="eyebrow" data-i18n="setup.eyebrow">Setup</p>
+		<h1 style="font-size:clamp(30px,5vw,46px)" data-i18n="setup.h1">Let's get you on air.</h1>
 
 		<section class="panel" id="panel1">
 			<div class="panel-gutter"><b>1</b><span class="rail"></span></div>
 			<div class="panel-body">
 				<div class="panel-head">
-					<h2>Where does your music come from?</h2>
+					<h2 data-i18n="setup.step1.title">Where does your music come from?</h2>
 					<span class="note" id="providerState"></span>
 				</div>
 				<div class="choices" id="providers"></div>
@@ -36,7 +36,7 @@
 			<div class="panel-gutter"><b>2</b><span class="rail"></span></div>
 			<div class="panel-body">
 				<div class="panel-head">
-					<h2 id="step2Title">Install the extension and take your key</h2>
+					<h2 id="step2Title" data-i18n="setup.step2.extension.title">Install the extension and take your key</h2>
 					<span class="note" id="step2Note"></span>
 				</div>
 				<div id="step2"></div>
@@ -47,20 +47,20 @@
 			<div class="panel-gutter"><b>3</b></div>
 			<div class="panel-body">
 				<div class="panel-head">
-					<h2>Make it yours</h2>
-					<span class="note">Saved as you go.</span>
+					<h2 data-i18n="setup.step3.title">Make it yours</h2>
+					<span class="note" data-i18n="setup.step3.note">Saved as you go.</span>
 				</div>
 				<div id="studio"></div>
 				<div class="row" style="margin-top:20px">
-					<button class="btn primary" id="finish" type="button">Finish setup</button>
-					<span class="note">You can change any of this later.</span>
+					<button class="btn primary" id="finish" type="button" data-i18n="setup.finish">Finish setup</button>
+					<span class="note" data-i18n="setup.finishNote">You can change any of this later.</span>
 				</div>
 			</div>
 		</section>
 	</main>
 
 	<script type="module">
-		import { api, toast, copyField, el, mountStyleStudio, setLamp, PROVIDERS, BROWSERS, providerById } from "/assets/app.js";
+		import { api, toast, copyField, el, mountStyleStudio, setLamp, mountLangSwitch, t, PROVIDERS, BROWSERS, providerById } from "/assets/app.js";
 
 		const account = await api("/api/me");
 		let provider = account.provider;
@@ -71,7 +71,8 @@
 			account.user.avatarUrl ? Object.assign(new Image(), { src: account.user.avatarUrl, alt: "" }) : el("span"),
 			el("span", null, account.user.displayName)
 		);
-		const out = el("button", "btn quiet", "Sign out");
+		mountLangSwitch(who);
+		const out = el("button", "btn quiet", t("common.signOut"));
 		out.addEventListener("click", () => {
 			const f = document.createElement("form");
 			f.method = "POST";
@@ -95,15 +96,20 @@
 				btn.type = "button";
 				btn.disabled = !ready;
 				btn.setAttribute("aria-pressed", String(provider === p.id));
-				btn.innerHTML = `
-					<span class="tag">${ready ? "Ready" : "Soon"}</span>
-					<h3>${p.name}</h3>
-					<p>${p.tagline}</p>
-					<p style="margin-top:8px">${p.how}</p>`;
+				btn.append(
+					el("span", "tag", ready ? t("setup.ready") : t("setup.soon")),
+					el("h3", null, t(p.nameKey)),
+					el("p", null, t(p.taglineKey))
+				);
+				const how = el("p", null, t(p.howKey));
+				how.style.marginTop = "8px";
+				btn.append(how);
 				btn.addEventListener("click", () => choose(p.id));
 				providersEl.append(btn);
 			}
-			providerState.textContent = provider ? `Using ${providerById(provider)?.name}` : "";
+			providerState.textContent = provider
+				? t("setup.using", { name: t(providerById(provider)?.nameKey) })
+				: "";
 		}
 
 		async function choose(id) {
@@ -113,7 +119,7 @@
 				provider = next.provider;
 				renderProviders();
 				unlock();
-				toast(`${providerById(provider)?.name} it is`);
+				toast(t("setup.chose", { name: t(providerById(provider)?.nameKey) }));
 			} catch (err) {
 				toast(err.message, true);
 			}
@@ -132,30 +138,27 @@
 
 			step2.append(el("hr", "rule"));
 			const obs = el("div");
-			obs.append(copyField(account.overlayUrl, { label: "Overlay URL for OBS" }));
+			obs.append(copyField(account.overlayUrl, { label: t("setup.overlayUrlLabel") }));
 			const list = el("ol", "steps");
-			for (const s of [
-				"In OBS: Sources → + → Browser.",
-				"Paste the URL above.",
-				"Set the width and height to suit your scene — 400 x 400 is a good start.",
-				"Leave “Shutdown source when not visible” off, so it reconnects on its own.",
-			]) list.append(el("li", null, s));
+			for (const key of ["setup.obs.1", "setup.obs.2", "setup.obs.3", "setup.obs.4"]) {
+				list.append(el("li", null, t(key)));
+			}
 			list.style.marginTop = "12px";
 			obs.append(list);
-			obs.append(el("p", "note", "This URL is not secret enough to show on stream — anyone with it can watch what you play. Rotate it from your dashboard if it leaks."));
+			obs.append(el("p", "note", t("setup.urlWarning")));
 			step2.append(obs);
 		}
 
 		function renderLinkStep() {
-			step2Title.textContent = "Connect your Spotify account";
-			step2Note.textContent = "Nothing to install.";
+			step2Title.textContent = t("setup.step2.link.title");
+			step2Note.textContent = t("setup.step2.link.note");
 
 			const row = el("div", "row");
-			const link = el("a", "btn primary", account.spotify ? "Reconnect Spotify" : "Connect Spotify");
+			const link = el("a", "btn primary", t(account.spotify ? "setup.spotify.reconnect" : "setup.spotify.connect"));
 			link.href = "/auth/spotify";
 			row.append(link);
 			if (account.spotify) {
-				const off = el("button", "btn quiet", "Disconnect");
+				const off = el("button", "btn quiet", t("setup.spotify.disconnect"));
 				off.type = "button";
 				off.addEventListener("click", disconnectSpotify);
 				row.append(off);
@@ -163,15 +166,15 @@
 			step2.append(row);
 
 			step2.append(el("p", "note", account.spotify
-				? `Connected as ${account.spotify.displayName || "your Spotify account"}. Cue reads your playback only while a browser source is open in OBS.`
-				: "Cue asks for read-only access to what you are playing. It cannot start, stop or change anything, and it only looks while OBS has your overlay open."));
+				? t("setup.spotify.connectedAs", {
+						name: account.spotify.displayName || t("setup.spotify.yourAccount"),
+					})
+				: t("setup.spotify.readOnly")));
 
 			const steps = el("ol", "steps");
-			for (const s of [
-				"Sign in to Spotify and approve the read-only access.",
-				"Play something on any device — desktop, phone or the web player.",
-				"Paste the overlay URL below into OBS.",
-			]) steps.append(el("li", null, s));
+			for (const key of ["setup.spotify.step.1", "setup.spotify.step.2", "setup.spotify.step.3"]) {
+				steps.append(el("li", null, t(key)));
+			}
 			steps.style.marginTop = "14px";
 			step2.append(steps);
 		}
@@ -181,14 +184,14 @@
 				await api("/api/me/spotify/disconnect", { method: "POST" });
 				account.spotify = null;
 				renderStep2();
-				toast("Spotify disconnected");
+				toast(t("setup.spotify.disconnected"));
 			} catch (err) {
 				toast(err.message, true);
 			}
 		}
 
 		function renderExtensionStep() {
-			step2Title.textContent = "Install the extension and take your key";
+			step2Title.textContent = t("setup.step2.extension.title");
 			step2Note.textContent = "";
 
 			const pick = el("div", "choices");
@@ -196,7 +199,11 @@
 				const btn = el("button", "choice");
 				btn.type = "button";
 				btn.setAttribute("aria-pressed", String(browser === b.id));
-				btn.innerHTML = `<span class="tag">${b.engine}</span><h3>${b.name}</h3><p>${b.note}</p>`;
+				btn.append(
+					el("span", "tag", b.engine),
+					el("h3", null, t(b.nameKey)),
+					el("p", null, t(b.noteKey))
+				);
 				btn.addEventListener("click", () => {
 					browser = b.id;
 					renderStep2();
@@ -209,16 +216,16 @@
 			const grab = el("div", "row");
 			grab.style.marginTop = "16px";
 			if (account.downloads[browser]) {
-				const link = el("a", "btn primary", `Download for ${chosen.engine}`);
+				const link = el("a", "btn primary", t("setup.download", { engine: chosen.engine }));
 				link.href = `/downloads/${browser}`;
 				grab.append(link);
 			} else {
-				grab.append(el("span", "note", "No build is published for this browser yet — build it from the repo with `node extension/build.mjs --zip`."));
+				grab.append(el("span", "note", t("setup.noBuild")));
 			}
 			step2.append(grab);
 
 			const steps = el("ol", "steps");
-			for (const s of chosen.steps) steps.append(el("li", null, s));
+			for (const key of chosen.stepKeys) steps.append(el("li", null, t(key)));
 			steps.style.marginTop = "14px";
 			step2.append(steps);
 
@@ -238,20 +245,23 @@
 			const keyBox = document.getElementById("keyBox");
 			keyBox.innerHTML = "";
 			if (revealedKey) return void keyBox.append(revealBox(revealedKey));
-			keyBox.append(copyField(null, { label: "Extension key", masked: account.key?.masked ?? "no key yet" }));
+			keyBox.append(copyField(null, {
+				label: t("setup.key.label"),
+				masked: account.key?.masked ?? t("setup.key.none"),
+			}));
 			const row = el("div", "row");
 			row.style.marginTop = "10px";
-			const gen = el("button", "btn", "Show me a key");
+			const gen = el("button", "btn", t("setup.key.generate"));
 			gen.addEventListener("click", generateKey);
-			row.append(gen, el("span", "note", "Cue only stores a fingerprint of your key, so it can show it to you once and never again."));
+			row.append(gen, el("span", "note", t("setup.key.fingerprint")));
 			keyBox.append(row);
 		}
 
 		function revealBox(writeKey) {
 			const reveal = el("div", "reveal");
-			reveal.append(el("p", "warn", "Copy this into the extension now. It is not shown again."));
-			reveal.append(copyField(writeKey, { label: "Extension key" }));
-			reveal.append(el("p", "note", "Open the extension, paste it into Key, and press Connect. Any key you had before has stopped working."));
+			reveal.append(el("p", "warn", t("setup.key.copyNow")));
+			reveal.append(copyField(writeKey, { label: t("setup.key.label") }));
+			reveal.append(el("p", "note", t("setup.key.paste")));
 			return reveal;
 		}
 
@@ -274,7 +284,7 @@
 
 		document.getElementById("finish").addEventListener("click", async (ev) => {
 			if (providerById(provider)?.transport === "account" && !account.spotify) {
-				return toast("Connect your Spotify account in step 2 first", true);
+				return toast(t("setup.spotify.needed"), true);
 			}
 			ev.target.disabled = true;
 			try {
@@ -300,9 +310,9 @@
 		const linkResult = new URLSearchParams(location.search).get("spotify");
 		if (linkResult) {
 			history.replaceState(null, "", location.pathname);
-			if (linkResult === "linked") toast("Spotify connected");
-			else if (linkResult === "unconfigured") toast("Spotify is not configured on this server", true);
-			else toast("Spotify did not connect — try again", true);
+			if (linkResult === "linked") toast(t("setup.spotify.connected"));
+			else if (linkResult === "unconfigured") toast(t("setup.spotify.unconfigured"), true);
+			else toast(t("setup.spotify.failed"), true);
 		}
 
 		renderProviders();
