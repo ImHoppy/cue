@@ -117,10 +117,21 @@ const q = {
 	),
 	setProvider: db.prepare("UPDATE users SET provider = ? WHERE id = ?"),
 	setSetupDone: db.prepare("UPDATE users SET setup_done = ? WHERE id = ?"),
-	listUsers: db.prepare<[], User & { read_key: string | null; last_seen_at: number | null; overlay_seen_at: number | null }>(
+	listUsers: db.prepare<
+		[],
+		User & {
+			read_key: string | null;
+			last_seen_at: number | null;
+			overlay_seen_at: number | null;
+			spotify_linked: number;
+		}
+	>(
 		`SELECT ${userCols.split(", ").map((c) => `u.${c}`).join(", ")},
-		        k.read_key, k.last_seen_at, k.overlay_seen_at
-		 FROM users u LEFT JOIN user_keys k ON k.user_id = u.id
+		        k.read_key, k.last_seen_at, k.overlay_seen_at,
+		        (s.user_id IS NOT NULL) AS spotify_linked
+		 FROM users u
+		 LEFT JOIN user_keys k ON k.user_id = u.id
+		 LEFT JOIN spotify_accounts s ON s.user_id = u.id
 		 ORDER BY u.last_login_at DESC`
 	),
 
@@ -402,6 +413,8 @@ export function collectStats(days = 30) {
 				)
 				.all()
 				.map((r) => ({ provider: r.provider ?? "none", count: r.n })),
+			spotifyLinked: countOf("SELECT COUNT(*) AS n FROM spotify_accounts"),
+			spotifyPicked: countOf("SELECT COUNT(*) AS n FROM users WHERE provider = 'spotify'"),
 		},
 		activity: {
 			new7d: countOf("SELECT COUNT(*) AS n FROM users WHERE created_at >= ?", now - 7 * DAY_MS),

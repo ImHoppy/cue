@@ -50,6 +50,15 @@
 		</section>
 
 		<section class="panel">
+			<div class="panel-gutter"><span>source</span><span class="rail"></span></div>
+			<div class="panel-body">
+				<div class="chart-head"><h2>Where the music comes from</h2></div>
+				<p class="chart-sub" id="sourceSub"></p>
+				<div id="sourceChart"></div>
+			</div>
+		</section>
+
+		<section class="panel">
 			<div class="panel-gutter"><span>style</span><span class="rail"></span></div>
 			<div class="panel-body">
 				<div class="chart-head"><h2>What people run</h2></div>
@@ -140,6 +149,19 @@
 			percent: true,
 		});
 
+		// ---- source ----------------------------------------------------------
+		const sourceName = (id) => (id === "none" ? "No source picked" : providerById(id)?.name ?? id);
+		barChart(
+			document.getElementById("sourceChart"),
+			[...totals.providers]
+				.sort((a, b) => b.count - a.count)
+				.map((p) => ({ label: sourceName(p.provider), count: p.count })),
+			{ total: totals.users, percent: true }
+		);
+		document.getElementById("sourceSub").textContent = totals.spotifyPicked
+			? `${totals.spotifyLinked} of ${totals.spotifyPicked} Spotify accounts are actually linked. An unlinked one has nothing to read.`
+			: "Counted across every account.";
+
 		// ---- style breakdowns ------------------------------------------------
 		// Nominal rows: one hue for every bar, never a ramp.
 		const modeNames = { default: "Card", compact: "Single line", cover: "Cover art" };
@@ -152,8 +174,7 @@
 
 		// ---- roster ----------------------------------------------------------
 		const users = roster.users;
-		document.getElementById("usersSub").textContent =
-			`${users.length} total · ${totals.providers.map((p) => `${p.count} ${p.provider === "none" ? "no source picked" : providerById(p.provider)?.name ?? p.provider}`).join(" · ")}`;
+		document.getElementById("usersSub").textContent = `${users.length} total`;
 
 		const table = document.getElementById("users");
 		const head = el("tr");
@@ -178,7 +199,9 @@
 			row.append(
 				name,
 				el("td", "mono", u.twitchId),
-				el("td", null, u.provider ? providerById(u.provider)?.name ?? u.provider : "—"),
+				el("td", null, u.provider
+					? `${providerById(u.provider)?.name ?? u.provider}${u.provider === "spotify" ? (u.spotifyLinked ? " · linked" : " · not linked") : ""}`
+					: "—"),
 				el("td", null, u.setupDone ? "done" : "unfinished"),
 				el("td", "mono", ago(u.lastSeenAt)),
 				el("td", "mono", u.overlaySeenAt ? "seen" : "never"),

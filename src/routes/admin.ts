@@ -19,6 +19,7 @@ export function registerAdmin(app: FastifyInstance) {
 				displayName: u.display_name,
 				avatarUrl: u.avatar_url,
 				provider: u.provider,
+				spotifyLinked: !!u.spotify_linked,
 				setupDone: !!u.setup_done,
 				createdAt: u.created_at,
 				lastLoginAt: u.last_login_at,
