@@ -41,7 +41,6 @@
 	margin: 8px;
 	background: var(--bg);
 	border-radius: var(--radius);
-	box-shadow: 0 12px 40px rgba(0, 0, 0, 0.45);
 	color: var(--text);
 	position: relative;
 	overflow: hidden;
