@@ -141,12 +141,16 @@
 				: t("dash.spotify.notConnected")));
 			keyBox.append(el("p", "note", t("dash.spotify.privacy")));
 
+			if (account.spotifyClosed) keyBox.append(el("p", "warn", t("setup.spotify.closed")));
+
 			const row = el("div", "row");
 			row.style.marginTop = "10px";
-			const link = el("a", account.spotify ? "btn quiet" : "btn primary",
-				t(account.spotify ? "dash.spotify.reconnect" : "setup.spotify.connect"));
-			link.href = "/auth/spotify";
-			row.append(link);
+			if (!account.spotifyClosed) {
+				const link = el("a", account.spotify ? "btn quiet" : "btn primary",
+					t(account.spotify ? "dash.spotify.reconnect" : "setup.spotify.connect"));
+				link.href = "/auth/spotify";
+				row.append(link);
+			}
 			if (account.spotify) {
 				const off = el("button", "btn danger", t("setup.spotify.disconnect"));
 				off.type = "button";
@@ -205,7 +209,9 @@
 		const linkResult = new URLSearchParams(location.search).get("spotify");
 		if (linkResult) {
 			history.replaceState(null, "", location.pathname);
-			toast(t(linkResult === "linked" ? "setup.spotify.connected" : "setup.spotify.failed"), linkResult !== "linked");
+			if (linkResult === "linked") toast(t("setup.spotify.connected"));
+			else if (linkResult === "closed") toast(t("setup.spotify.closedToast"), true);
+			else toast(t("setup.spotify.failed"), true);
 		}
 
 		// ---- style -----------------------------------------------------------

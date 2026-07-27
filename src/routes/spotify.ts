@@ -3,7 +3,7 @@ import { randomBytes } from "node:crypto";
 import { cookieBase, currentUser, readSigned, requireUser } from "../auth.js";
 import { publicHost, publicUrl, spotifyEnabled } from "../config.js";
 import { ensureKeys, linkSpotify, setProvider, spotifyForUser, unlinkSpotify } from "../db.js";
-import { exchangeCode, fetchProfile, spotifyAuthorizeUrl } from "../spotify.js";
+import { canLinkSpotify, exchangeCode, fetchProfile, spotifyAuthorizeUrl } from "../spotify.js";
 
 const STATE = "spotify_state";
 
@@ -14,6 +14,7 @@ export function registerSpotify(app: FastifyInstance) {
 		const user = currentUser(req);
 		if (!user) return reply.redirect("/");
 		if (!spotifyEnabled) return reply.redirect(`${back(!user.setup_done)}?spotify=unconfigured`);
+		if (!canLinkSpotify(user)) return reply.redirect(`${back(!user.setup_done)}?spotify=closed`);
 
 		const state = randomBytes(16).toString("base64url");
 		reply.setCookie(STATE, state, { ...cookieBase, maxAge: 600 });
@@ -35,6 +36,8 @@ export function registerSpotify(app: FastifyInstance) {
 
 			const expected = readSigned(req, STATE);
 			reply.clearCookie(STATE, { path: "/" });
+
+			if (!canLinkSpotify(user)) return reply.redirect(`${back(!user.setup_done)}?spotify=closed`);
 
 			const { code, state, error } = req.query;
 			const fail = (detail: string) => {

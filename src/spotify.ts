@@ -1,12 +1,18 @@
-import { spotifyClientId, spotifyClientSecret, spotifyRedirectUri } from "./config.js";
+import { isAdmin } from "./auth.js";
+import { spotifyClientId, spotifyClientSecret, spotifyEnabled, spotifyLinkingOpen, spotifyRedirectUri } from "./config.js";
 import type { Snapshot } from "./contract.js";
-import { updateSpotifyTokens, type SpotifyLink } from "./db.js";
+import { updateSpotifyTokens, type SpotifyLink, type User } from "./db.js";
 
 const AUTHORIZE = "https://accounts.spotify.com/authorize";
 const TOKEN = "https://accounts.spotify.com/api/token";
 const PLAYER = "https://api.spotify.com/v1/me/player/currently-playing";
 
 export const SCOPES = "user-read-playback-state user-read-currently-playing";
+
+export const canLinkSpotify = (user: User) =>
+	spotifyEnabled && (spotifyLinkingOpen || isAdmin(user) || user.spotify_linked_at !== null);
+
+export const spotifyLinkClosed = (user: User) => spotifyEnabled && !canLinkSpotify(user);
 
 const basic = () => Buffer.from(`${spotifyClientId}:${spotifyClientSecret}`).toString("base64");
 

@@ -34,6 +34,8 @@ export const spotifyRedirectUri = (
 	process.env.SPOTIFY_REDIRECT_URI ?? `${publicUrl}/auth/spotify/callback`
 ).replace(/\/$/, "");
 
+export const spotifyLinkingOpen = /^(1|true|yes|on)$/i.test(process.env.SPOTIFY_OPEN_LINKING ?? "");
+
 export const spotifyPollMs = Number(process.env.SPOTIFY_POLL_MS ?? 5000);
 export const spotifyIdlePollMs = Number(process.env.SPOTIFY_IDLE_POLL_MS ?? 15000);
 
@@ -57,4 +59,6 @@ if (!authEnabled) {
 }
 if (!spotifyEnabled) {
 	console.warn("SPOTIFY_CLIENT_ID/SPOTIFY_CLIENT_SECRET unset — Spotify is offered as unavailable.");
+} else if (!spotifyLinkingOpen) {
+	console.warn("SPOTIFY_OPEN_LINKING unset — only admins and already-linked accounts can link Spotify.");
 }

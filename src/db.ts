@@ -15,6 +15,7 @@ export type User = {
 	setup_done: number;
 	created_at: number;
 	last_login_at: number;
+	spotify_linked_at: number | null;
 };
 
 export type Keys = {
@@ -98,11 +99,19 @@ function addColumn(table: string, column: string, decl: string) {
 addColumn("user_keys", "last_seen_at", "INTEGER");
 addColumn("user_keys", "overlay_seen_at", "INTEGER");
 
+addColumn("users", "spotify_linked_at", "INTEGER");
+db.exec(
+	`UPDATE users SET spotify_linked_at = (SELECT s.linked_at FROM spotify_accounts s WHERE s.user_id = users.id)
+	 WHERE spotify_linked_at IS NULL
+	   AND EXISTS (SELECT 1 FROM spotify_accounts s WHERE s.user_id = users.id)`
+);
+
 const hash = (key: string) => createHash("sha256").update(key).digest("hex");
 const token = () => randomBytes(24).toString("base64url");
 const PREFIX_LEN = 6;
 
-const userCols = "id, twitch_id, login, display_name, avatar_url, provider, setup_done, created_at, last_login_at";
+const userCols =
+	"id, twitch_id, login, display_name, avatar_url, provider, setup_done, created_at, last_login_at, spotify_linked_at";
 const keyCols = "user_id, write_key_prefix, read_key, created_at, rotated_at";
 
 const q = {
@@ -158,6 +167,9 @@ const q = {
 			refresh_token = excluded.refresh_token,
 			expires_at = excluded.expires_at,
 			linked_at = excluded.linked_at`
+	),
+	markSpotifyLinked: db.prepare(
+		"UPDATE users SET spotify_linked_at = COALESCE(spotify_linked_at, ?) WHERE id = ?"
 	),
 	updateSpotifyTokens: db.prepare(
 		"UPDATE spotify_accounts SET access_token = ?, refresh_token = ?, expires_at = ? WHERE user_id = ?"
@@ -282,6 +294,7 @@ export function linkSpotify(link: {
 	refreshToken: string;
 	expiresAt: number;
 }) {
+	const now = Date.now();
 	q.linkSpotify.run({
 		userId: link.userId,
 		spotifyId: link.spotifyId,
@@ -289,8 +302,9 @@ export function linkSpotify(link: {
 		access: seal(link.accessToken),
 		refresh: seal(link.refreshToken),
 		expiresAt: link.expiresAt,
-		now: Date.now(),
+		now,
 	});
+	q.markSpotifyLinked.run(now, link.userId);
 }
 
 export function updateSpotifyTokens(userId: number, accessToken: string, refreshToken: string, expiresAt: number) {

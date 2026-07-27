@@ -97,8 +97,9 @@
 				btn.type = "button";
 				btn.disabled = !ready;
 				btn.setAttribute("aria-pressed", String(provider === p.id));
+				const closed = !ready && p.id === "spotify" && account.spotifyClosed;
 				btn.append(
-					el("span", "tag", ready ? t("setup.ready") : t("setup.soon")),
+					el("span", "tag", ready ? t("setup.ready") : closed ? t("setup.closed") : t("setup.soon")),
 					el("h3", null, t(p.nameKey)),
 					el("p", null, t(p.taglineKey))
 				);
@@ -155,9 +156,11 @@
 			step2Note.textContent = t("setup.step2.link.note");
 
 			const row = el("div", "row");
-			const link = el("a", "btn primary", t(account.spotify ? "setup.spotify.reconnect" : "setup.spotify.connect"));
-			link.href = "/auth/spotify";
-			row.append(link);
+			if (!account.spotifyClosed) {
+				const link = el("a", "btn primary", t(account.spotify ? "setup.spotify.reconnect" : "setup.spotify.connect"));
+				link.href = "/auth/spotify";
+				row.append(link);
+			}
 			if (account.spotify) {
 				const off = el("button", "btn quiet", t("setup.spotify.disconnect"));
 				off.type = "button";
@@ -165,6 +168,8 @@
 				row.append(off);
 			}
 			step2.append(row);
+
+			if (account.spotifyClosed) step2.append(el("p", "warn", t("setup.spotify.closed")));
 
 			step2.append(el("p", "note", account.spotify
 				? t("setup.spotify.connectedAs", {
@@ -313,6 +318,7 @@
 			history.replaceState(null, "", location.pathname);
 			if (linkResult === "linked") toast(t("setup.spotify.connected"));
 			else if (linkResult === "unconfigured") toast(t("setup.spotify.unconfigured"), true);
+			else if (linkResult === "closed") toast(t("setup.spotify.closedToast"), true);
 			else toast(t("setup.spotify.failed"), true);
 		}
 

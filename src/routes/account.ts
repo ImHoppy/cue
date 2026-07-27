@@ -18,11 +18,15 @@ import {
 	type User,
 } from "../db.js";
 import { clientsFor, dropHub, pushSettings } from "../hubs.js";
+import { canLinkSpotify, spotifyLinkClosed } from "../spotify.js";
 import { maskKey } from "../../shared/contract.js";
 
 export const overlayUrlFor = (readKey: string) => `${publicUrl}/overlay?key=${readKey}`;
 
 export const buildAvailable = (target: string) => existsSync(join(downloadsDir, `${target}.zip`));
+
+const providersFor = (user: User) =>
+	availableProviderIds.filter((id) => id !== "spotify" || canLinkSpotify(user));
 
 function accountView(user: User) {
 	const keys = keysForUser(user.id);
@@ -35,8 +39,9 @@ function accountView(user: User) {
 			isAdmin: isAdmin(user),
 		},
 		provider: user.provider,
-		availableProviders: availableProviderIds,
+		availableProviders: providersFor(user),
 		spotify: spotify ? { displayName: spotify.displayName } : null,
+		spotifyClosed: spotifyLinkClosed(user),
 		setupDone: !!user.setup_done,
 		key: keys ? { prefix: keys.write_key_prefix, masked: maskKey(keys.write_key_prefix) } : null,
 		overlayUrl: keys ? overlayUrlFor(keys.read_key) : null,
@@ -60,10 +65,10 @@ export function registerAccount(app: FastifyInstance) {
 
 		api.post("/api/me/provider", async (req, reply) => {
 			const body = z.object({ provider: z.string() }).safeParse(req.body);
-			if (!body.success || !availableProviderIds.includes(body.data.provider)) {
+			const user = currentUser(req)!;
+			if (!body.success || !providersFor(user).includes(body.data.provider)) {
 				return reply.code(400).send({ error: "unsupported_provider" });
 			}
-			const user = currentUser(req)!;
 			setProvider(user.id, body.data.provider);
 			if (transportFor(body.data.provider) === "account") ensureKeys(user.id);
 			return accountView(currentUser(req)!);
