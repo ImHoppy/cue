@@ -1,5 +1,7 @@
 export const MODES = ["default", "compact", "cover"];
 
+export const ALIGNS = ["left", "center", "right"];
+
 /**
  * Where the music comes from. `extension` providers push presence with a write
  * key; `account` providers are polled by the server from a linked account, so
@@ -61,6 +63,12 @@ export const SETTING_FIELDS = [
 		] },
 	{ key: "coverSize", type: "range", labelKey: "field.coverSize", default: 200, min: 120, max: 360, step: 4, unit: "px",
 		showIf: (s) => s.mode === "cover" },
+	{ key: "align", type: "select", labelKey: "field.align", default: "left",
+		options: [
+			{ value: "left", labelKey: "field.align.left" },
+			{ value: "center", labelKey: "field.align.center" },
+			{ value: "right", labelKey: "field.align.right" },
+		] },
 	{ key: "scale", type: "range", labelKey: "field.scale", default: 100, min: 60, max: 180, step: 1, unit: "%" },
 	{ key: "radius", type: "range", labelKey: "field.radius", default: 12, min: 0, max: 30, step: 1, unit: "px" },
 

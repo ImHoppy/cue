@@ -1,7 +1,7 @@
 /**
  * The overlay card renderer, with no opinion about where its data comes from.
  */
-import { DEFAULT_SETTINGS, MODES, normalizeSettings } from "./contract.js";
+import { ALIGNS, DEFAULT_SETTINGS, MODES, normalizeSettings } from "./contract.js";
 
 const MARKUP = `
 	<div class="card hidden" part="card">
@@ -192,6 +192,7 @@ export function createOverlay(host, opts = {}) {
 		style.setProperty("--blur-brightness", String(1 - settings.blurDark / 100));
 
 		for (const m of MODES) card.classList.toggle(m, settings.mode === m);
+		for (const a of ALIGNS) card.classList.toggle(`align-${a}`, settings.align === a);
 		card.classList.toggle("no-progress", !settings.showProgress);
 		card.classList.toggle("bg-blur", settings.blur);
 		artBg.style.backgroundImage =
@@ -239,6 +240,7 @@ export function settingsFromParams(params) {
 	take("text", "textColor", (v) => v);
 	take("bg", "blur", (v) => (v === "blur" ? true : undefined));
 	take("mode", "mode", (v) => (MODES.includes(v) ? v : undefined));
+	take("align", "align", (v) => (ALIGNS.includes(v) ? v : undefined));
 	take("compact", "mode", (v) => (v === "1" ? "compact" : undefined));
 	take("scale", "scale", Number);
 	take("hideWhenPaused", "hideWhenPaused", (v) => v === "1");

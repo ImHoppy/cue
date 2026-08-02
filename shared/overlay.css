@@ -201,8 +201,8 @@
 	background: linear-gradient(to top, rgba(0, 0, 0, 0.85) 30%, rgba(0, 0, 0, 0));
 }
 
-.card.cover .title { font-size: 14px; max-width: none; }
-.card.cover .artist { font-size: 11px; max-width: none; }
+.card.cover .title { font-size: 14px; max-width: 100%; }
+.card.cover .artist { font-size: 11px; max-width: 100%; }
 
 .card.cover .progress {
 	position: absolute;
@@ -240,3 +240,10 @@
 .card.compact .progress { gap: 0; margin-left: 6px; }
 .card.compact .time { display: none; }
 .card.compact .bar { width: 45px; }
+
+.card.align-center { margin-left: auto; margin-right: auto; transform-origin: top center; }
+.card.align-right { margin-left: auto; transform-origin: top right; }
+
+.card.align-right:not(.cover) { flex-direction: row-reverse; padding: 8px 8px 8px 14px; }
+.card.align-right.compact { padding: 6px 6px 6px 12px; }
+.card.align-right:not(.compact) .info { align-items: flex-end; }
