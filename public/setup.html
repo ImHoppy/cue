@@ -225,6 +225,8 @@
 				const link = el("a", "btn primary", t("setup.download", { engine: chosen.engine }));
 				link.href = `/downloads/${browser}`;
 				grab.append(link);
+				const version = account.extensionVersions?.[browser];
+				if (version) grab.append(el("span", "note", `v${version}`));
 			} else {
 				grab.append(el("span", "note", t("setup.noBuild")));
 			}

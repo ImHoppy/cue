@@ -6,6 +6,7 @@ services:
         # Baked into the extension's manifest at build time, so it has to match
         # the URL the site is actually served from.
         PUBLIC_URL: ${PUBLIC_URL:?set PUBLIC_URL}
+        EXT_BUILD: ${EXT_BUILD:-}
     restart: unless-stopped
     environment:
       PUBLIC_URL: ${PUBLIC_URL:?set PUBLIC_URL}

@@ -275,6 +275,11 @@ const STRINGS = {
 		"popup.error.key_rejected": "Key rejected",
 		"popup.error.server_said": "Server said {status}",
 		"popup.error.unreachable": "Cannot reach the server",
+		"popup.update.title": "Update available",
+		"popup.update.download": "Download",
+		"popup.update.later": "Later",
+		"popup.update.how.chrome": "Unzip over your existing folder, then hit Reload on chrome://extensions.",
+		"popup.update.how.firefox": "Unzip, then load the manifest.json again from about:debugging.",
 
 		"server.signInUnconfigured.title": "Sign-in is not configured",
 		"server.signInUnconfigured.body": "Set TWITCH_CLIENT_ID and TWITCH_CLIENT_SECRET on the server.",
@@ -554,6 +559,11 @@ const STRINGS = {
 		"popup.error.key_rejected": "Clé refusée",
 		"popup.error.server_said": "Le serveur a répondu {status}",
 		"popup.error.unreachable": "Serveur injoignable",
+		"popup.update.title": "Mise à jour disponible",
+		"popup.update.download": "Télécharger",
+		"popup.update.later": "Plus tard",
+		"popup.update.how.chrome": "Décompressez par-dessus votre dossier existant, puis cliquez sur Actualiser dans chrome://extensions.",
+		"popup.update.how.firefox": "Décompressez, puis rechargez le manifest.json depuis about:debugging.",
 
 		"server.signInUnconfigured.title": "La connexion n'est pas configurée",
 		"server.signInUnconfigured.body": "Définissez TWITCH_CLIENT_ID et TWITCH_CLIENT_SECRET sur le serveur.",

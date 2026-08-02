@@ -3,6 +3,7 @@ import { normalizeSettings, presenceSchema } from "../contract.js";
 import { loadSettings, markProducerSeen, resolveWriteKey, saveSettings } from "../db.js";
 import { countPresence, hubForWrite } from "../hubs.js";
 import { publicUrl } from "../config.js";
+import { buildVersions } from "./account.js";
 
 // Cors protected by bearer token
 const CORS = {
@@ -30,6 +31,11 @@ export function registerPresence(app: FastifyInstance) {
 
 		api.options("/api/presence", preflight);
 		api.options("/api/settings", preflight);
+
+		api.get("/api/extension/version", {
+			config: { rateLimit: { max: 60, timeWindow: "1 minute" } },
+			handler: async () => ({ versions: buildVersions() }),
+		});
 
 		api.get("/api/settings", async (req, reply) => {
 			const writeKey = bearer(req.headers.authorization);

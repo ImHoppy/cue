@@ -7,7 +7,7 @@
  * service worker can go to sleep between tracks without dropping a connection.
  */
 import { DEFAULT_SETTINGS, normalizeSettings } from "./shared/contract.js";
-import { DEFAULT_SERVER } from "./config.generated.js";
+import { DEFAULT_SERVER, EXTENSION_TARGET } from "./config.generated.js";
 
 const browserAPI = typeof browser !== "undefined" ? browser : chrome;
 
@@ -31,15 +31,73 @@ let lastError = null;
 /** Public half of the pair, learned from the server so the popup can show the OBS URL. */
 let overlayUrl = "";
 
+const currentVersion = browserAPI.runtime.getManifest().version;
+const downloadUrl = `${serverUrl}/downloads/${EXTENSION_TARGET}`;
+const UPDATE_CHECK_MS = 6 * 60 * 60 * 1000;
+
+let latestVersion = "";
+let dismissedVersion = "";
+let lastUpdateCheck = 0;
+
 async function loadConfig() {
 	try {
-		const stored = await browserAPI.storage.local.get(["writeKey", "overlaySettings", "overlayUrl"]);
+		const stored = await browserAPI.storage.local.get([
+			"writeKey",
+			"overlaySettings",
+			"overlayUrl",
+			"latestVersion",
+			"dismissedVersion",
+			"lastUpdateCheck",
+		]);
 		writeKey = stored.writeKey || "";
 		overlayUrl = stored.overlayUrl || "";
 		settings = normalizeSettings(stored.overlaySettings);
+		latestVersion = stored.latestVersion || "";
+		dismissedVersion = stored.dismissedVersion || "";
+		lastUpdateCheck = stored.lastUpdateCheck || 0;
 	} catch {
 		settings = { ...DEFAULT_SETTINGS };
 	}
+}
+
+const parts = (v) => String(v).split(".").map(Number);
+
+function isNewer(a, b) {
+	if (!/^\d+(\.\d+){0,3}$/.test(String(a)) || !/^\d+(\.\d+){0,3}$/.test(String(b))) return false;
+	const left = parts(a);
+	const right = parts(b);
+	for (let i = 0; i < Math.max(left.length, right.length); i++) {
+		const diff = (left[i] || 0) - (right[i] || 0);
+		if (diff !== 0) return diff > 0;
+	}
+	return false;
+}
+
+const updatePending = () => isNewer(latestVersion, currentVersion) && latestVersion !== dismissedVersion;
+
+async function paintBadge() {
+	try {
+		const pending = updatePending();
+		await browserAPI.action.setBadgeText({ text: pending ? "•" : "" });
+		if (pending) await browserAPI.action.setBadgeBackgroundColor({ color: "#ffae3b" });
+	} catch {}
+}
+
+async function checkForUpdate(force = false) {
+	await ready;
+	if (!force && Date.now() - lastUpdateCheck < UPDATE_CHECK_MS) return;
+	lastUpdateCheck = Date.now();
+	try {
+		const res = await fetch(`${serverUrl}/api/extension/version`);
+		if (res.ok) {
+			const found = (await res.json())?.versions?.[EXTENSION_TARGET];
+			if (typeof found === "string" && /^\d+(\.\d+){0,3}$/.test(found)) latestVersion = found;
+		}
+	} catch {}
+	try {
+		await browserAPI.storage.local.set({ latestVersion, lastUpdateCheck });
+	} catch {}
+	paintBadge();
 }
 
 const httpError = (status) =>
@@ -123,8 +181,30 @@ browserAPI.runtime.onMessage.addListener((msg, _sender, sendResponse) => {
 	}
 
 	if (msg.type === "GET_STATUS") {
-		sendResponse({ connected, lastError, serverUrl, overlayUrl, hasKey: !!writeKey, lastSnapshot, settings });
+		sendResponse({
+			connected,
+			lastError,
+			serverUrl,
+			overlayUrl,
+			hasKey: !!writeKey,
+			lastSnapshot,
+			settings,
+			update: {
+				current: currentVersion,
+				latest: latestVersion,
+				pending: updatePending(),
+				url: downloadUrl,
+				target: EXTENSION_TARGET,
+			},
+		});
 		return true;
+	}
+
+	if (msg.type === "DISMISS_UPDATE") {
+		dismissedVersion = latestVersion;
+		browserAPI.storage.local.set({ dismissedVersion });
+		paintBadge();
+		return;
 	}
 });
 
@@ -155,13 +235,23 @@ async function injectIntoOpenTabs() {
 }
 
 // Fires on install, on update, and when an unpacked extension is reloaded.
-browserAPI.runtime.onInstalled.addListener(injectIntoOpenTabs);
+browserAPI.runtime.onInstalled.addListener(() => {
+	injectIntoOpenTabs();
+	checkForUpdate(true);
+});
 
 // The worker is allowed to sleep; this only makes sure a long silence still
 // re-checks the account rather than leaving the popup showing a stale state.
 browserAPI.alarms.create("recheck", { periodInMinutes: 5 });
 browserAPI.alarms.onAlarm.addListener(() => {
 	if (connected === false) pullAccount();
+	checkForUpdate();
 });
 
-loadConfig().then(pullAccount);
+const ready = loadConfig();
+
+ready.then(() => {
+	paintBadge();
+	pullAccount();
+	checkForUpdate();
+});

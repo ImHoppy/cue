@@ -76,6 +76,7 @@ function paintStatus(res) {
 
 	editor.setSettings(res.settings || DEFAULT_SETTINGS);
 	overlay.applySettings(res.settings || DEFAULT_SETTINGS);
+	paintUpdate(res.update);
 
 	// A real track beats the fake one — if music is playing, show that instead.
 	if (res.lastSnapshot?.hasTrack) {
@@ -84,6 +85,27 @@ function paintStatus(res) {
 		$("previewNote").textContent = t("popup.showingLive");
 	}
 }
+
+let downloadUrl = "";
+
+function paintUpdate(update) {
+	if (!update) return;
+	$("version").textContent = `v${update.current}`;
+	downloadUrl = update.url;
+	$("update").hidden = !update.pending;
+	if (!update.pending) return;
+	$("updateJump").textContent = `${update.current} → ${update.latest}`;
+	$("updateHow").textContent = t(`popup.update.how.${update.target}`);
+}
+
+$("updateGet").addEventListener("click", () => {
+	if (downloadUrl) browserAPI.tabs.create({ url: downloadUrl });
+});
+
+$("updateLater").addEventListener("click", () => {
+	browserAPI.runtime.sendMessage({ type: "DISMISS_UPDATE" });
+	$("update").hidden = true;
+});
 
 function refresh() {
 	browserAPI.runtime.sendMessage({ type: "GET_STATUS" }, paintStatus);

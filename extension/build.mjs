@@ -23,6 +23,7 @@
  * store/deflate writer handles correctly.
  */
 import { deflateRawSync, crc32 as nodeCrc32 } from "node:zlib";
+import { execFileSync } from "node:child_process";
 import { cpSync, mkdirSync, readFileSync, rmSync, statSync, writeFileSync, readdirSync } from "node:fs";
 import { dirname, join, relative, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
@@ -41,9 +42,33 @@ const flag = (name, fallback) => {
 };
 
 const outDir = resolve(flag("out", join(here, "dist")));
-const server = String(flag("server", process.env.PUBLIC_URL || "https://hoppy.ovh")).replace(/\/+$/, "");
+const server = String(flag("server", process.env.PUBLIC_URL || "https://cue.hoppy.ovh")).replace(/\/+$/, "");
 const wantZip = argv.includes("--zip");
 const target = flag("target", "all");
+
+const baseManifest = JSON.parse(readFileSync(join(srcDir, "manifest.json"), "utf8"));
+
+function git(args) {
+	try {
+		return execFileSync("git", args, {
+			cwd: repoRoot,
+			encoding: "utf8",
+			stdio: ["ignore", "pipe", "ignore"],
+		}).trim();
+	} catch {
+		return "";
+	}
+}
+
+const buildNumber = String(flag("build", process.env.EXT_BUILD) || "").trim() || git(["rev-list", "--count", "HEAD"]);
+if (buildNumber && !(/^\d+$/.test(buildNumber) && Number(buildNumber) <= 65535)) {
+	console.error(`--build must be a whole number up to 65535, got "${buildNumber}"`);
+	process.exit(1);
+}
+
+const [major, minor] = String(baseManifest.version).split(".");
+const version = buildNumber ? `${major}.${minor}.${buildNumber}` : String(baseManifest.version);
+const revision = git(["rev-parse", "--short", "HEAD"]);
 
 const TARGETS = {
 	chrome: {
@@ -51,6 +76,7 @@ const TARGETS = {
 		patch(manifest) {
 			// Chromium runs MV3 background as a service worker.
 			manifest.background = { service_worker: "background.js", type: "module" };
+			if (revision) manifest.version_name = `${version} (${revision})`;
 		},
 	},
 	firefox: {
@@ -101,10 +127,12 @@ function build(name) {
 	writeFileSync(
 		join(dest, "config.generated.js"),
 		`// Written by extension/build.mjs — edit build.mjs or pass --server, not this file.\n` +
-			`export const DEFAULT_SERVER = ${JSON.stringify(server)};\n`
+			`export const DEFAULT_SERVER = ${JSON.stringify(server)};\n` +
+			`export const EXTENSION_TARGET = ${JSON.stringify(name)};\n`
 	);
 
 	const manifest = JSON.parse(readFileSync(join(srcDir, "manifest.json"), "utf8"));
+	manifest.version = version;
 	manifest.host_permissions = manifest.host_permissions.map((p) =>
 		p.replace("__SERVER_ORIGIN__", serverOrigin)
 	);
@@ -214,7 +242,12 @@ function makeZip(root, names) {
 
 // ---- go --------------------------------------------------------------------
 
-console.log(`Building the extension against ${serverOrigin}`);
+console.log(`Building the extension ${version}${revision ? ` (${revision})` : ""} against ${serverOrigin}`);
+if (!buildNumber) {
+	console.warn(
+		`  no --build, no EXT_BUILD and no git here — stamping ${version}, which never reads as an update`
+	);
+}
 mkdirSync(outDir, { recursive: true });
 for (const name of targets) build(name);
 console.log(

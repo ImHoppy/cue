@@ -1,5 +1,5 @@
 import type { FastifyInstance } from "fastify";
-import { existsSync } from "node:fs";
+import { existsSync, readFileSync, statSync } from "node:fs";
 import { join } from "node:path";
 import { z } from "zod";
 import { currentUser, isAdmin, requireUser } from "../auth.js";
@@ -25,6 +25,26 @@ export const overlayUrlFor = (readKey: string) => `${publicUrl}/overlay?key=${re
 
 export const buildAvailable = (target: string) => existsSync(join(downloadsDir, `${target}.zip`));
 
+const versions = new Map<string, { mtimeMs: number; version: string | null }>();
+
+export function buildVersion(target: string): string | null {
+	const file = join(downloadsDir, target, "manifest.json");
+	try {
+		const { mtimeMs } = statSync(file);
+		const hit = versions.get(target);
+		if (hit && hit.mtimeMs === mtimeMs) return hit.version;
+
+		const raw = JSON.parse(readFileSync(file, "utf8")) as { version?: unknown };
+		const version = typeof raw.version === "string" && /^\d+(\.\d+){0,3}$/.test(raw.version) ? raw.version : null;
+		versions.set(target, { mtimeMs, version });
+		return version;
+	} catch {
+		return null;
+	}
+}
+
+export const buildVersions = () => ({ chrome: buildVersion("chrome"), firefox: buildVersion("firefox") });
+
 const providersFor = (user: User) =>
 	availableProviderIds.filter((id) => id !== "spotify" || canLinkSpotify(user));
 
@@ -48,6 +68,7 @@ function accountView(user: User) {
 		settings: loadSettings(user.id),
 		overlayConnected: keys ? clientsFor(keys.read_key) : 0,
 		downloads: { chrome: buildAvailable("chrome"), firefox: buildAvailable("firefox") },
+		extensionVersions: buildVersions(),
 	};
 }
 

@@ -13,9 +13,10 @@ RUN npm run build
 
 # The extension has the server origin baked into its manifest, so it is built
 # here against the same URL the site will be served from.
-ARG PUBLIC_URL=https://hoppy.ovh
+ARG PUBLIC_URL=https://cue.hoppy.ovh
+ARG EXT_BUILD=
 COPY extension ./extension
-RUN node extension/build.mjs --zip --server "$PUBLIC_URL"
+RUN EXT_BUILD="$EXT_BUILD" node extension/build.mjs --zip --server "$PUBLIC_URL"
 
 FROM node:22-bookworm-slim
 WORKDIR /app

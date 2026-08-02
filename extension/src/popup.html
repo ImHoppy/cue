@@ -102,10 +102,33 @@
 		.hint { margin: 6px 0 0; font-size: 11px; color: var(--mute); }
 
 		.style-editor { --se-field: var(--panel); }
+
+		.update {
+			border: 1px solid var(--signal);
+			border-radius: 8px;
+			padding: 10px;
+			margin-bottom: 12px;
+			background: rgba(255, 174, 59, 0.08);
+		}
+		.update h2 { color: var(--signal); margin-bottom: 4px; }
+		.update .jump { font-family: var(--mono); font-size: 11px; color: var(--paper); }
+		.update .row { display: flex; gap: 6px; margin-top: 8px; }
+		.update .row button { width: auto; flex: 1 1 auto; padding: 6px 8px; font-size: 12px; }
+		.ver { font-family: var(--mono); font-size: 10px; color: var(--mute); }
 	</style>
 </head>
 <body>
 	<h1><span class="dot" id="dot"></span>Cue<span class="state" id="state" data-i18n="popup.checking">checking…</span></h1>
+
+	<div class="update" id="update" hidden>
+		<h2 data-i18n="popup.update.title">Update available</h2>
+		<p class="jump" id="updateJump"></p>
+		<p class="hint" id="updateHow"></p>
+		<div class="row">
+			<button id="updateGet" type="button" data-i18n="popup.update.download">Download</button>
+			<button class="quiet" id="updateLater" type="button" data-i18n="popup.update.later">Later</button>
+		</div>
+	</div>
 
 	<section id="connect">
 		<h2 data-i18n="popup.connection">Connection</h2>
@@ -119,6 +142,7 @@
 			<span data-i18n="popup.noKeyHint">No key?</span>
 			<a id="dashLink" href="#" target="_blank" rel="noopener" data-i18n="popup.openDashboard">Open your dashboard</a>
 			<span data-i18n="popup.andGenerate">and generate one.</span>
+			<span class="ver" id="version"></span>
 		</p>
 	</section>
 
