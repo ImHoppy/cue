@@ -1,5 +1,5 @@
 import type { FastifyInstance } from "fastify";
-import { requireAdmin } from "../auth.js";
+import { isAdmin, requireAdmin } from "../auth.js";
 import { collectStats, listUsers } from "../db.js";
 import { hubStats } from "../hubs.js";
 
@@ -18,6 +18,7 @@ export function registerAdmin(app: FastifyInstance) {
 				login: u.login,
 				displayName: u.display_name,
 				avatarUrl: u.avatar_url,
+				isAdmin: isAdmin(u),
 				provider: u.provider,
 				spotifyLinked: !!u.spotify_linked,
 				setupDone: !!u.setup_done,
