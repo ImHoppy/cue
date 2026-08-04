@@ -7,7 +7,7 @@ const AUTHORIZE = "https://accounts.spotify.com/authorize";
 const TOKEN = "https://accounts.spotify.com/api/token";
 const PLAYER = "https://api.spotify.com/v1/me/player/currently-playing";
 
-export const SCOPES = "user-read-playback-state user-read-currently-playing";
+export const SCOPES = "user-read-playback-state user-read-currently-playing user-read-email";
 
 export const canLinkSpotify = (user: User) =>
 	spotifyEnabled && (spotifyLinkingOpen || isAdmin(user) || user.spotify_linked_at !== null);
